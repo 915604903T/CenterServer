@@ -21,9 +21,9 @@ func Router() *mux.Router {
 }
 
 func Serve(handlers *MyHandlers) {
-	router.HandleFunc("/user/scenefile/{name}", handlers.UserFileReceiveHandler)
-	router.HandleFunc("/model/{name}", handlers.ModelControllerHandler)
-	router.HandleFunc("/relocalise/{name}", handlers.RelocaliseControllerHandler)
+	router.HandleFunc("/user/scene/{name}", handlers.UserFileReceiveHandler)
+	router.HandleFunc("/sys/model/{name}", handlers.ModelControllerHandler)
+	router.HandleFunc("/sys/relocalise/{name}", handlers.RelocaliseControllerHandler)
 
 	tcpPort := 23333
 	s := &http.Server{
