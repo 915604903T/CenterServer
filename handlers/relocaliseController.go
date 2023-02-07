@@ -5,15 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		sceneName := vars["name"]
-		log.Print("receive user file request: ", sceneName)
+		log.Print("relocalise global pose request")
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)

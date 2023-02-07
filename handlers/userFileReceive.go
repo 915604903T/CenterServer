@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 
 	"github.com/gorilla/mux"
@@ -49,7 +50,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 				io.Copy(dst, part)
 			}
 		}
-		w.WriteHeader(http.StatusAccepted)
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))
 
 		// send file to a client to process voxel scene and relocaliser model
@@ -62,7 +63,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			log.Fatal(err)
 		}
 		for _, entry := range files {
-			name := "./" + sceneName + entry.Name()
+			name := filepath.Join("./" + sceneName + entry.Name())
 			file, err := os.Open(name)
 			if err != nil {
 				log.Fatal(err)

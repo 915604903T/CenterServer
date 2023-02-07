@@ -53,10 +53,11 @@ func MakeModelControllerHandler() http.HandlerFunc {
 				PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
 				ScenesListLock.Unlock()
 
-				// send scene info to
+				// send scene info to client
+				// always use the first scene client to run relocalise
 				clientNO := ClientScenes[name1]
 				clientIP := ClientAddrs[clientNO]
-				url := clientIP + "/relocalise/info/?name1=" + name1 + "&name2=" + name2
+				url := clientIP + "/relocalise/info"
 				info := relocaliseInfo{
 					name1,
 					ClientAddrs[ClientScenes[name1]],
