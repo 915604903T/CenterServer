@@ -73,7 +73,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		}
 		contentType := bodyWriter.FormDataContentType()
 		bodyWriter.Close()
-		url := sendAddr + "/scene/" + sceneName
+		url := sendAddr + "/render/scene/" + sceneName
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)

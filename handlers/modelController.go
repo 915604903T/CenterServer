@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -20,6 +22,8 @@ func MakeModelControllerHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		if string(body) != "OK" {
 			log.Fatal(body)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		} else {
 			// Add scene to candidate list
 			ScenesListLock.Lock()
@@ -49,13 +53,44 @@ func MakeModelControllerHandler() http.HandlerFunc {
 				PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
 				ScenesListLock.Unlock()
 
+				// send scene info to
 				clientNO := ClientScenes[name1]
 				clientIP := ClientAddrs[clientNO]
-				url := clientIP + "/?name1=" + name1 + "&name2=" + name2
-
+				url := clientIP + "/relocalise/info/?name1=" + name1 + "&name2=" + name2
+				info := relocaliseInfo{
+					name1,
+					ClientAddrs[ClientScenes[name1]],
+					name2,
+					ClientAddrs[ClientScenes[name2]],
+				}
+				infoStr, err := json.Marshal(info)
+				if err != nil {
+					log.Fatal(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				buf := bytes.NewBuffer([]byte(infoStr))
+				request, err := http.NewRequest("GET", url, buf)
+				if err != nil {
+					log.Fatal(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				resp, err := http.DefaultClient.Do(request)
+				if err != nil {
+					log.Fatal(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				defer resp.Body.Close()
+				if resp.StatusCode != http.StatusOK {
+					resp_body, _ := ioutil.ReadAll(resp.Body)
+					log.Fatal("receive error from relocalise: ", resp_body)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 			}
 		}
-
 		w.WriteHeader(http.StatusAccepted)
 	}
 }

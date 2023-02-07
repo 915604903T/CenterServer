@@ -7,17 +7,34 @@ var Client1Port, Client2Port string
 
 var ClientAddrs []string
 var ClientScenes map[string]int
-var globalPose map[[2]string][4][4]float64
+var globalPoses map[[2]string][2]pose
 
 var PrepareScenesList []string
 var ProcessingSceneList []string
 var SuccessScenesList map[string]bool
 
 var ScenesListLock sync.RWMutex
+var globalPoseLock sync.RWMutex
 
 var clientCnt int = 2
 var nowClient int32 = -1
 var sceneIndex int = 0
+
+type pose [4][2]float32
+
+type globalPose struct {
+	Scene1Name string `json:"scene1name"`
+	Scene1Pose pose   `json:"scene1pose"`
+	Scene2Name string `json:"scene2name"`
+	Scene2Pose pose   `json:"scene2pose"`
+}
+
+type relocaliseInfo struct {
+	Scene1Name string `json:"scene1name"`
+	Scene1IP   string `json:"scene1ip"`
+	Scene2Name string `json:"scene2name"`
+	Scene2IP   string `json:"scene2ip"`
+}
 
 func init() {
 	Client1Ip = "127.0.0.1"
@@ -34,5 +51,5 @@ func init() {
 	PrepareScenesList = []string{}
 	ProcessingSceneList = []string{}
 	SuccessScenesList = make(map[string]bool)
-	globalPose = make(map[[2]string][4][4]float64)
+	globalPoses = make(map[[2]string][2]pose)
 }
