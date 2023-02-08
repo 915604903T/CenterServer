@@ -43,8 +43,8 @@ func init() {
 	Client2Port = "23335"
 
 	ClientAddrs = []string{}
-	ClientAddrs = append(ClientAddrs, Client1Ip+":"+Client1Port)
-	ClientAddrs = append(ClientAddrs, Client2Ip+":"+Client2Port)
+	ClientAddrs = append(ClientAddrs, "http://"+Client1Ip+":"+Client1Port)
+	ClientAddrs = append(ClientAddrs, "http://"+Client2Ip+":"+Client2Port)
 
 	ClientScenes = make(map[string]int)
 
