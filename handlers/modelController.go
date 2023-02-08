@@ -20,6 +20,7 @@ func MakeModelControllerHandler() http.HandlerFunc {
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
+		log.Print("this is body: ", string(body))
 		if string(body) != "OK" {
 			log.Fatal(body)
 			w.WriteHeader(http.StatusBadRequest)
@@ -92,6 +93,6 @@ func MakeModelControllerHandler() http.HandlerFunc {
 				}
 			}
 		}
-		w.WriteHeader(http.StatusAccepted)
+		w.WriteHeader(http.StatusOK)
 	}
 }
