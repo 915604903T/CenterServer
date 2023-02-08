@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"sync/atomic"
 
 	"github.com/gorilla/mux"
@@ -47,19 +46,8 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 				}
 			}
 		*/
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("save file success!"))
 
 		// send file to a client to process voxel scene and relocaliser model
-		log.Print("forward the request to client server")
-		clientNO := chooseClient()
-		sendAddr := ClientAddrs[clientNO]
-		url, err := url.Parse(sendAddr + "/render/scene/" + sceneName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		r.URL = url
-		resp, err := http.DefaultClient.Do(r)
 		/*
 			files, err := os.ReadDir(sceneName)
 			bodyBuffer := &bytes.Buffer{}
@@ -80,8 +68,13 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			contentType := bodyWriter.FormDataContentType()
 			bodyWriter.Close()
 		*/
-		// url := sendAddr + "/render/scene/" + sceneName
-		// resp, err := http.Post(url, contentType, bodyBuffer)
+
+		log.Print("forward the request to client server")
+		clientNO := chooseClient()
+		sendAddr := ClientAddrs[clientNO]
+		contentType := "multipart/form-data"
+		url := sendAddr + "/render/scene/" + sceneName
+		resp, err := http.Post(url, contentType, r.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -91,6 +84,9 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			log.Fatal("receive error from model controller: ", resp_body)
 		}
 		ClientScenes[sceneName] = clientNO
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("save file success!"))
 		log.Println("finish UserFileReceiveHandler")
 	}
 }
