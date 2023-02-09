@@ -13,6 +13,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
+		log.Println("receive globalpose: ", string(body))
 		poseInfo := globalPose{}
 		err := json.Unmarshal(body, &poseInfo)
 		if err != nil {
@@ -32,8 +33,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			globalPoses[pair] = [2]pose{poseInfo.Scene1Pose, poseInfo.Scene2Pose}
 			globalPoseLock.Unlock()
 		}
-		log.Println("this is ", poseInfo.Scene1Name, poseInfo.Scene1Name, "global pose")
-		log.Println(poseInfo)
+		log.Println("this is globalpose struct:\n", poseInfo)
 		w.WriteHeader(http.StatusOK)
 	}
 }

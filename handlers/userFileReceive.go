@@ -76,10 +76,10 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			contentType := bodyWriter.FormDataContentType()
 			bodyWriter.Close()
 		*/
-		log.Print("forward the request to client server")
 		clientNO := chooseClient()
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
+		log.Print("forward the request to client server: ", url)
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)

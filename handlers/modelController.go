@@ -65,6 +65,8 @@ func MakeModelControllerHandler() http.HandlerFunc {
 					name2,
 					ClientAddrs[ClientScenes[name2]],
 				}
+				log.Println("this is relocalise info: \n", info)
+				log.Println("send to url: ", url)
 				infoStr, err := json.Marshal(info)
 				if err != nil {
 					log.Fatal(err)

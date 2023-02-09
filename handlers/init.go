@@ -20,7 +20,7 @@ var clientCnt int = 2
 var nowClient int32 = -1
 var sceneIndex int = 0
 
-type pose [4][2]float32
+type pose [4][2]float64
 
 type globalPose struct {
 	Scene1Name string `json:"scene1name"`
