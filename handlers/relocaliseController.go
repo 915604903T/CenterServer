@@ -32,6 +32,8 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			globalPoses[pair] = [2]pose{poseInfo.Scene1Pose, poseInfo.Scene2Pose}
 			globalPoseLock.Unlock()
 		}
+		log.Println("this is ", poseInfo.Scene1Name, poseInfo.Scene1Name, "global pose")
+		log.Println(poseInfo)
 		w.WriteHeader(http.StatusOK)
 	}
 }
