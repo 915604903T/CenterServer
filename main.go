@@ -12,6 +12,7 @@ func main() {
 		UserFileReceiveHandler:      handlers.MakeUserFileReceiveHandler(),
 		ModelControllerHandler:      handlers.MakeModelControllerHandler(),
 		RelocaliseControllerHandler: handlers.MakeRelocaliseControllerHandler(),
+		ClientResourceInfoHandler:	 handlers.MakeClientResourceInfoHandler(),
 	}
 	log.Print("Center server start at port: 23333")
 	helper.Serve(&centerHandlers)
