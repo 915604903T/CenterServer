@@ -115,5 +115,5 @@ func RunReloclise() {
 		log.Fatal("receive error from relocalise: ", resp_body)
 		return
 	}
-	time.Sleep(time.second)
+	time.Sleep(time.Second)
 }
