@@ -24,7 +24,7 @@ func MakeClientResourceInfoHandler() http.HandlerFunc {
 			panic(err)
 		}
 		resourceInfoLock.Lock()
-		ClientResourceStats[id] = resourceInfo
+		ClientResourceStats[id-1] = resourceInfo
 		resourceInfoLock.Unlock()
 		w.WriteHeader(http.StatusOK)
 	}
