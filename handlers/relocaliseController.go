@@ -10,7 +10,7 @@ import (
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("relocalise global pose request")
+		log.Print("relocalise global pose request!!!!!!!!!!!!!!!")
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
@@ -32,8 +32,12 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 				FailedSceneList[scene2][scene1]++
 			}
 			log.Println("add ", scene1, scene2, "to failedList")
+
+			ScenesListLock.Lock()
 			PrepareScenesList = append(PrepareScenesList, scene1)
 			PrepareScenesList = append(PrepareScenesList, scene2)
+			ScenesListLock.Unlock()
+
 			w.WriteHeader(http.StatusOK)
 			return
 		}

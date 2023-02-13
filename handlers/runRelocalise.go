@@ -72,10 +72,13 @@ func genCandidate(method string) (int, int) {
 
 func RunReloclise() {
 	for {
+		log.Println("[runRelocalise]: preparedScene: ", PrepareScenesList)
 		if len(PrepareScenesList) >= 2 {
 			// randomly choose scene to relocalise
+			ScenesListLock.RLock()
 			index1, index2 := genCandidate("weighted")
 			name1, name2 := PrepareScenesList[index1], PrepareScenesList[index2]
+			ScenesListLock.RUnlock()
 
 			// delete candidates scene from PrepareScenesList
 			ScenesListLock.Lock()
