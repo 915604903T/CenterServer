@@ -25,6 +25,7 @@ func Serve(handlers *MyHandlers) {
 	router.HandleFunc("/sys/model/{name}", handlers.ModelControllerHandler)
 	router.HandleFunc("/sys/relocalise", handlers.RelocaliseControllerHandler)
 	router.HandleFunc("/sys/client/{id}", handlers.ClientResourceInfoHandler)
+	router.HandleFunc("/user/query", handlers.UserQueryHandler)
 
 	tcpPort := 23333
 	s := &http.Server{
