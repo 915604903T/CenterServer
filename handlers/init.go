@@ -1,12 +1,9 @@
 package handlers
 
 import (
-	"log"
 	"math/rand"
 	"sync"
 	"time"
-
-	"github.com/shirou/gopsutil/v3/mem"
 )
 
 const clientCnt int = 2
@@ -75,6 +72,4 @@ func init() {
 
 	rand.Seed(time.Now().Unix())
 
-	v, _ := mem.VirtualMemory()
-	log.Println("v: ", v)
 }
