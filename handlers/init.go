@@ -1,6 +1,10 @@
 package handlers
 
-import "sync"
+import (
+	"math/rand"
+	"sync"
+	"time"
+)
 
 var Client1Ip, Client2Ip string
 var Client1Port, Client2Port string
@@ -10,8 +14,8 @@ var ClientScenes map[string]int
 var globalPoses map[[2]string][2]pose
 
 var PrepareScenesList []string
-var ProcessingSceneList []string
 var SuccessScenesList map[string]bool
+var FailedSceneList map[string]map[string]int
 
 var ScenesListLock sync.RWMutex
 var globalPoseLock sync.RWMutex
@@ -19,6 +23,8 @@ var globalPoseLock sync.RWMutex
 var clientCnt int = 2
 var nowClient int32 = -1
 var sceneIndex int = 0
+
+const candidateNum int = 10
 
 type pose [4][2]float64
 
@@ -49,7 +55,9 @@ func init() {
 	ClientScenes = make(map[string]int)
 
 	PrepareScenesList = []string{}
-	ProcessingSceneList = []string{}
 	SuccessScenesList = make(map[string]bool)
+	FailedSceneList = make(map[string]map[string]int)
 	globalPoses = make(map[[2]string][2]pose)
+
+	rand.Seed(time.Now().Unix())
 }

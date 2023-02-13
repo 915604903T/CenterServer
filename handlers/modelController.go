@@ -7,11 +7,69 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 )
 
+func genRandomCandidate() (int, int) {
+	var index1, index2 int
+	length := len(PrepareScenesList)
+	index1 = rand.Intn(length)
+	for index2 == index1 {
+		index2 = rand.Intn(length)
+	}
+	// Always keep index1<index2
+	if index2 < index1 {
+		index1, index2 = index2, index1
+	}
+	return index1, index2
+}
+
+func scoreCandidate(c1, c2 string) float64 {
+	if FailedSceneList[c1] != nil {
+		if count, ok := FailedSceneList[c1][c2]; ok {
+			return 1.0 / float64(count)
+		}
+	}
+	return 2.0
+}
+func genWeightedCandidate() (int, int) {
+	length := len(PrepareScenesList)
+	maxf := 0.0
+	maxIndex := [2]int{}
+	for i := 0; i < candidateNum; i++ {
+		i1 := rand.Intn(length)
+		i2 := rand.Intn(length)
+		for i2 == i1 {
+			i2 = rand.Intn(length)
+		}
+		if i2 < i1 {
+			i1, i2 = i2, i1
+		}
+		score := scoreCandidate(PrepareScenesList[i1], PrepareScenesList[i2])
+		if score == 2.0 {
+			return i1, i2
+		}
+		if maxf < score {
+			maxf = score
+			maxIndex[0] = i1
+			maxIndex[1] = i2
+		}
+	}
+	return maxIndex[0], maxIndex[1]
+}
+
+func genCandidate(method string) (int, int) {
+	switch method {
+	case "random":
+		return genRandomCandidate()
+	case "weighted":
+		return genWeightedCandidate()
+	default:
+		log.Println("invalid generate candidate ")
+		return -1, -1
+	}
+}
 func MakeModelControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -37,20 +95,11 @@ func MakeModelControllerHandler() http.HandlerFunc {
 			length := len(PrepareScenesList)
 			if length > 1 {
 				// randomly choose scene to relocalise
-				rand.Seed(time.Now().Unix())
-				var index1, index2 int
-				index1 = rand.Intn(length)
-				if index1 == length-1 {
-					index1, index2 = index1-1, index1
-				} else {
-					index2 = index1 + 1
-				}
+				index1, index2 := genCandidate("weighted")
 				name1, name2 := PrepareScenesList[index1], PrepareScenesList[index2]
 
-				// delete candidates scene from PrepareScenesList and add them to ProcessingSceneList
+				// delete candidates scene from PrepareScenesList
 				ScenesListLock.Lock()
-				ProcessingSceneList = append(ProcessingSceneList, name1)
-				ProcessingSceneList = append(ProcessingSceneList, name2)
 				PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
 				ScenesListLock.Unlock()
 

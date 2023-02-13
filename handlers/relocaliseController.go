@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
@@ -13,7 +14,30 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
-		log.Println("receive globalpose: ", string(body))
+		bodyStr := string(body)
+		log.Println("receive globalpose: ", bodyStr)
+		if strings.Contains(bodyStr, "failed") {
+			content := strings.Fields(bodyStr)
+			scene1, scene2 := content[0], content[1]
+			if FailedSceneList[scene1] == nil {
+				FailedSceneList[scene1] = make(map[string]int)
+				FailedSceneList[scene1][scene2] = 1
+			} else {
+				FailedSceneList[scene1][scene2]++
+			}
+			if FailedSceneList[scene2] == nil {
+				FailedSceneList[scene2] = make(map[string]int)
+				FailedSceneList[scene2][scene1] = 1
+			} else {
+				FailedSceneList[scene2][scene1]++
+			}
+			log.Println("add ", scene1, scene2, "to failedList")
+			PrepareScenesList = append(PrepareScenesList, scene1)
+			PrepareScenesList = append(PrepareScenesList, scene2)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		poseInfo := globalPose{}
 		err := json.Unmarshal(body, &poseInfo)
 		if err != nil {

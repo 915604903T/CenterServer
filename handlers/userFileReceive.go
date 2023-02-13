@@ -55,27 +55,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		}
 		contentType := bodyWriter.FormDataContentType()
 		bodyWriter.Close()
-		// send file to a client to process voxel scene and relocaliser model
-		/*
-			files, err := os.ReadDir(sceneName)
-			bodyBuffer := &bytes.Buffer{}
-			bodyWriter := multipart.NewWriter(bodyBuffer)
-			if err != nil {
-				log.Fatal(err)
-			}
-			for _, entry := range files {
-				name := filepath.Join("./" + sceneName + entry.Name())
-				file, err := os.Open(name)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fileWriter, _ := bodyWriter.CreateFormFile("files", name)
-				io.Copy(fileWriter, file)
-				file.Close()
-			}
-			contentType := bodyWriter.FormDataContentType()
-			bodyWriter.Close()
-		*/
+
 		clientNO := chooseClient()
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
