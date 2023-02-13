@@ -71,49 +71,54 @@ func genCandidate(method string) (int, int) {
 }
 
 func RunReloclise() {
-	// randomly choose scene to relocalise
-	index1, index2 := genCandidate("weighted")
-	name1, name2 := PrepareScenesList[index1], PrepareScenesList[index2]
+	for {
+		if len(PrepareScenesList) >= 2 {
+			// randomly choose scene to relocalise
+			index1, index2 := genCandidate("weighted")
+			name1, name2 := PrepareScenesList[index1], PrepareScenesList[index2]
 
-	// delete candidates scene from PrepareScenesList
-	ScenesListLock.Lock()
-	PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
-	ScenesListLock.Unlock()
+			// delete candidates scene from PrepareScenesList
+			ScenesListLock.Lock()
+			PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
+			ScenesListLock.Unlock()
 
-	// send scene info to client
-	// always use the first scene client to run relocalise
-	clientNO := ClientScenes[name1]
-	clientIP := ClientAddrs[clientNO]
-	url := clientIP + "/relocalise/info"
-	info := relocaliseInfo{
-		name1,
-		ClientAddrs[ClientScenes[name1]],
-		name2,
-		ClientAddrs[ClientScenes[name2]],
+			// send scene info to client
+			// always use the first scene client to run relocalise
+			clientNO := ClientScenes[name1]
+			clientIP := ClientAddrs[clientNO]
+			url := clientIP + "/relocalise/info"
+			info := relocaliseInfo{
+				name1,
+				ClientAddrs[ClientScenes[name1]],
+				name2,
+				ClientAddrs[ClientScenes[name2]],
+			}
+			log.Println("this is relocalise info: \n", info)
+			log.Println("send to url: ", url)
+			infoStr, err := json.Marshal(info)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			buf := bytes.NewBuffer([]byte(infoStr))
+			request, err := http.NewRequest("GET", url, buf)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			resp, err := http.DefaultClient.Do(request)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				resp_body, _ := ioutil.ReadAll(resp.Body)
+				log.Fatal("receive error from relocalise: ", resp_body)
+				return
+			}
+		}
+		time.Sleep(time.Second)
 	}
-	log.Println("this is relocalise info: \n", info)
-	log.Println("send to url: ", url)
-	infoStr, err := json.Marshal(info)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	buf := bytes.NewBuffer([]byte(infoStr))
-	request, err := http.NewRequest("GET", url, buf)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		resp_body, _ := ioutil.ReadAll(resp.Body)
-		log.Fatal("receive error from relocalise: ", resp_body)
-		return
-	}
-	time.Sleep(time.Second)
+
 }
