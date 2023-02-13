@@ -24,6 +24,7 @@ func Serve(handlers *MyHandlers) {
 	router.HandleFunc("/user/scene/{name}", handlers.UserFileReceiveHandler)
 	router.HandleFunc("/sys/model/{name}", handlers.ModelControllerHandler)
 	router.HandleFunc("/sys/relocalise", handlers.RelocaliseControllerHandler)
+	router.HandleFunc("/sys/client/{id}", handlers.ClientResourceInfoHandler)
 
 	tcpPort := 23333
 	s := &http.Server{
