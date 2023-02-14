@@ -58,8 +58,12 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		}
 		log.Println("[MakeRelocaliseControllerHandler] this is globalpose struct:\n", poseInfo)
 
-		// delete processed scene from processing list
+		// delete processed scene from processing list and move to succeedScene
 		ScenesListLock.Lock()
+
+		SucceedSceneList = append(SucceedSceneList, poseInfo.Scene1Name)
+		SucceedSceneList = append(SucceedSceneList, poseInfo.Scene2Name)
+
 		index1, index2 := -1, -1
 		if val, ok := ProcessingScenesIndex[poseInfo.Scene1Name]; ok {
 			index1 = val

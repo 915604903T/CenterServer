@@ -20,6 +20,8 @@ var globalPoses map[[2]string][2]pose
 var ProcessingScenesList []string
 var ProcessingScenesIndex map[string]int
 
+var SucceedSceneList []string
+
 var FailedSceneList map[string]map[string]int
 
 var ScenesListLock sync.RWMutex
@@ -67,6 +69,8 @@ func init() {
 
 	ProcessingScenesList = []string{}
 	ProcessingScenesIndex = make(map[string]int)
+
+	SucceedSceneList = []string{}
 
 	FailedSceneList = make(map[string]map[string]int)
 	globalPoses = make(map[[2]string][2]pose)
