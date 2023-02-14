@@ -121,7 +121,7 @@ func RunReloclise() {
 				return
 			}
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second*10)
 	}
 
 }

@@ -31,7 +31,7 @@ func chooseResourceClient() int {
 		log.Println("this is ", i, " client score: ", score)
 		if score > maxScore {
 			maxIndex = i
-			score = maxScore
+			maxScore = score
 		}
 	}
 	return maxIndex
