@@ -12,20 +12,20 @@ func MakeModelControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		sceneName := vars["name"]
-		log.Print("model controller request: ", sceneName)
+		log.Print("[MakeModelControllerHandler] model controller request: ", sceneName)
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
-		log.Print("this is body: ", string(body))
+		log.Print("[MakeModelControllerHandler] this is body: ", string(body))
 		if string(body) != "OK" {
 			log.Fatal(body)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		} else {
-			// Add scene to candidate list
+			// Add scene to candidate list, the scene name must be unique
 			ScenesListLock.Lock()
-			PrepareScenesList = append(PrepareScenesList, sceneName)
-			sceneIndex++
+			ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
+			ProcessingScenesList = append(ProcessingScenesList, sceneName)
 			ScenesListLock.Unlock()
 		}
 

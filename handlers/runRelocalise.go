@@ -12,7 +12,7 @@ import (
 
 func genRandomCandidate() (int, int) {
 	var index1, index2 int
-	length := len(PrepareScenesList)
+	length := len(ProcessingScenesList)
 	index1 = rand.Intn(length)
 	for index2 == index1 {
 		index2 = rand.Intn(length)
@@ -33,7 +33,7 @@ func scoreCandidate(c1, c2 string) float64 {
 	return 2.0
 }
 func genWeightedCandidate() (int, int) {
-	length := len(PrepareScenesList)
+	length := len(ProcessingScenesList)
 	maxf := 0.0
 	maxIndex := [2]int{}
 	for i := 0; i < candidateNum; i++ {
@@ -45,7 +45,7 @@ func genWeightedCandidate() (int, int) {
 		if i2 < i1 {
 			i1, i2 = i2, i1
 		}
-		score := scoreCandidate(PrepareScenesList[i1], PrepareScenesList[i2])
+		score := scoreCandidate(ProcessingScenesList[i1], ProcessingScenesList[i2])
 		if score == 2.0 {
 			return i1, i2
 		}
@@ -72,32 +72,40 @@ func genCandidate(method string) (int, int) {
 
 func RunReloclise() {
 	for {
-		log.Println("[runRelocalise]: preparedScene: ", PrepareScenesList)
-		if len(PrepareScenesList) >= 2 {
+		log.Println("[runRelocalise] preparedScene: ", ProcessingScenesList)
+		if len(ProcessingScenesList) >= 2 {
 			// randomly choose scene to relocalise
 			ScenesListLock.RLock()
 			index1, index2 := genCandidate("weighted")
-			name1, name2 := PrepareScenesList[index1], PrepareScenesList[index2]
+			name1, name2 := ProcessingScenesList[index1], ProcessingScenesList[index2]
 			ScenesListLock.RUnlock()
 
-			// delete candidates scene from PrepareScenesList
-			ScenesListLock.Lock()
-			PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
-			ScenesListLock.Unlock()
+			clientNO1 := ClientScenes[name1]
+			clientNO2 := ClientScenes[name2]
+			score1, score2 := scoreClient(clientNO1), scoreClient(clientNO2)
+			if score1 < score2 {
+				name1, name2 = name2, name1
+				clientNO1, clientNO2 = clientNO2, clientNO1
+			}
+
+			// do delete candidates scene from PrepareScenesList
+			/*
+				ScenesListLock.Lock()
+				PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
+				ScenesListLock.Unlock()
+			*/
 
 			// send scene info to client
-			// always use the first scene client to run relocalise
-			clientNO := ClientScenes[name1]
-			clientIP := ClientAddrs[clientNO]
+			clientIP := ClientAddrs[clientNO1]
 			url := clientIP + "/relocalise/info"
 			info := relocaliseInfo{
 				name1,
-				ClientAddrs[ClientScenes[name1]],
+				ClientAddrs[clientNO1],
 				name2,
-				ClientAddrs[ClientScenes[name2]],
+				ClientAddrs[clientNO2],
 			}
-			log.Println("this is relocalise info: \n", info)
-			log.Println("send to url: ", url)
+			log.Println("[runRelocalise] this is relocalise info: \n", info)
+			log.Println("[runRelocalise] send to url: ", url)
 			infoStr, err := json.Marshal(info)
 			if err != nil {
 				log.Fatal(err)
@@ -117,11 +125,11 @@ func RunReloclise() {
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				resp_body, _ := ioutil.ReadAll(resp.Body)
-				log.Fatal("receive error from relocalise: ", resp_body)
+				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 				return
 			}
 		}
-		time.Sleep(time.Second*10)
+		time.Sleep(time.Second * 10)
 	}
 
 }

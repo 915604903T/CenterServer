@@ -17,8 +17,9 @@ var ClientResourceStats [clientCnt]ResourceInfo
 var ClientScenes map[string]int
 var globalPoses map[[2]string][2]pose
 
-var PrepareScenesList []string
-var SuccessScenesList map[string]bool
+var ProcessingScenesList []string
+var ProcessingScenesIndex map[string]int
+
 var FailedSceneList map[string]map[string]int
 
 var ScenesListLock sync.RWMutex
@@ -27,7 +28,6 @@ var globalPoseLock sync.RWMutex
 var resourceInfoLock sync.RWMutex
 
 var nowClient int32 = -1
-var sceneIndex int = 0
 
 const candidateNum int = 10
 
@@ -65,8 +65,9 @@ func init() {
 
 	ClientScenes = make(map[string]int)
 
-	PrepareScenesList = []string{}
-	SuccessScenesList = make(map[string]bool)
+	ProcessingScenesList = []string{}
+	ProcessingScenesIndex = make(map[string]int)
+
 	FailedSceneList = make(map[string]map[string]int)
 	globalPoses = make(map[[2]string][2]pose)
 

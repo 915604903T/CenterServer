@@ -12,12 +12,12 @@ import (
 
 func MakeClientResourceInfoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("receive client resource")
+		log.Print("[MakeClientResourceInfoHandler] receive client resource")
 		defer r.Body.Close()
 		body, _ := ioutil.ReadAll(r.Body)
 
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
-		log.Print(id, "client resource: ", string(body))
+		log.Print("[MakeClientResourceInfoHandler]", id, "client resource: ", string(body))
 		resourceInfo := ResourceInfo{}
 		err := json.Unmarshal(body, &resourceInfo)
 		if err != nil {

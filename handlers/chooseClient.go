@@ -28,7 +28,7 @@ func chooseResourceClient() int {
 	maxIndex := -1
 	for i := 0; i < clientCnt; i++ {
 		score := scoreClient(i)
-		log.Println("this is ", i, " client score: ", score)
+		log.Println("[chooseResourceClient] this is ", i, " client score: ", score)
 		if score > maxScore {
 			maxIndex = i
 			maxScore = score
@@ -44,7 +44,7 @@ func chooseClient(method string) int {
 	case "weighted":
 		return chooseResourceClient()
 	default:
-		log.Println("invalid client choose methods")
+		log.Println("[chooseClient] invalid client choose methods")
 		return -1
 	}
 }

@@ -17,7 +17,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		sceneName := vars["name"]
-		log.Print("receive user file request: ", sceneName)
+		log.Print("[MakeUserFileReceiveHandler] receive user file request: ", sceneName)
 		defer r.Body.Close()
 
 		// Create directory to save images, poses, calib.txt
@@ -52,10 +52,10 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		bodyWriter.Close()
 
 		clientNO := chooseClient("weighted")
-		log.Println("this is client", clientNO, "choose to render ", sceneName)
+		log.Println("[MakeUserFileReceiveHandler] this is client", clientNO, "choose to render ", sceneName)
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
-		log.Print("forward the request to client server: ", url)
+		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url)
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)
@@ -63,12 +63,12 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			resp_body, _ := ioutil.ReadAll(resp.Body)
-			log.Fatal("receive error from model controller: ", string(resp_body))
+			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(resp_body))
 		}
 		ClientScenes[sceneName] = clientNO
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))
-		log.Println("finish UserFileReceiveHandler")
+		log.Println("[MakeUserFileReceiveHandler] finish")
 	}
 }

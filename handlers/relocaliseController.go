@@ -10,7 +10,7 @@ import (
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("relocalise global pose request!!!!!!!!!!!!!!!")
+		log.Print("[MakeRelocaliseControllerHandler] relocalise global pose request!!!!!!!!!!!!!!!")
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
@@ -31,12 +31,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			} else {
 				FailedSceneList[scene2][scene1]++
 			}
-			log.Println("add ", scene1, scene2, "to failedList")
-
-			ScenesListLock.Lock()
-			PrepareScenesList = append(PrepareScenesList, scene1)
-			PrepareScenesList = append(PrepareScenesList, scene2)
-			ScenesListLock.Unlock()
+			log.Println("[MakeRelocaliseControllerHandler] add ", scene1, scene2, "to failedList")
 
 			w.WriteHeader(http.StatusOK)
 			return
@@ -45,7 +40,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		poseInfo := globalPose{}
 		err := json.Unmarshal(body, &poseInfo)
 		if err != nil {
-			log.Fatal("error de-serializing request body: ", body)
+			log.Fatal("[MakeRelocaliseControllerHandler] error de-serializing request body: ", body)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -61,7 +56,46 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			globalPoses[pair] = [2]pose{poseInfo.Scene1Pose, poseInfo.Scene2Pose}
 			globalPoseLock.Unlock()
 		}
-		log.Println("this is globalpose struct:\n", poseInfo)
+		log.Println("[MakeRelocaliseControllerHandler] this is globalpose struct:\n", poseInfo)
+
+		// delete processed scene from processing list
+		ScenesListLock.Lock()
+		index1, index2 := -1, -1
+		if val, ok := ProcessingScenesIndex[poseInfo.Scene1Name]; ok {
+			index1 = val
+			delete(ProcessingScenesIndex, poseInfo.Scene1Name)
+		}
+		if val, ok := ProcessingScenesIndex[poseInfo.Scene2Name]; ok {
+			index2 = val
+			delete(ProcessingScenesIndex, poseInfo.Scene2Name)
+		}
+		if index1 != -1 {
+			tmp := 0
+			for i, v := range ProcessingScenesList {
+				if i != index1 {
+					ProcessingScenesList[tmp] = v
+					tmp++
+				}
+			}
+			ProcessingScenesList = ProcessingScenesList[:tmp]
+		}
+		if index2 != -1 {
+			tmp := 0
+			for i, v := range ProcessingScenesList {
+				if i != index2 {
+					ProcessingScenesList[tmp] = v
+					tmp++
+				}
+			}
+			ProcessingScenesList = ProcessingScenesList[:tmp]
+		}
+		if index1 != -1 || index2 != -1 {
+			for i, v := range ProcessingScenesList {
+				ProcessingScenesIndex[v] = i
+			}
+		}
+		ScenesListLock.Unlock()
+
 		w.WriteHeader(http.StatusOK)
 	}
 }
