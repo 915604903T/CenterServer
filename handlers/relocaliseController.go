@@ -16,9 +16,16 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		bodyStr := string(body)
 		log.Println("receive globalpose: ", bodyStr)
+
 		if strings.Contains(bodyStr, "failed") {
 			content := strings.Fields(bodyStr)
 			scene1, scene2 := content[0], content[1]
+
+			RunningScenePairsLock.Lock()
+			delete(RunningScenePairs, scenePair{scene1, scene2})
+			delete(RunningScenePairs, scenePair{scene2, scene1})
+			RunningScenePairsLock.Unlock()
+
 			if FailedSceneList[scene1] == nil {
 				FailedSceneList[scene1] = make(map[string]int)
 				FailedSceneList[scene1][scene2] = 1
@@ -45,7 +52,13 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			return
 		}
 		isExit := false
-		pair := [2]string{poseInfo.Scene1Name, poseInfo.Scene2Name}
+		pair := scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name}
+
+		RunningScenePairsLock.Lock()
+		delete(RunningScenePairs, scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name})
+		delete(RunningScenePairs, scenePair{poseInfo.Scene2Name, poseInfo.Scene1Name})
+		RunningScenePairsLock.Unlock()
+
 		globalPoseLock.RLock()
 		if _, ok := globalPoses[pair]; ok {
 			isExit = true

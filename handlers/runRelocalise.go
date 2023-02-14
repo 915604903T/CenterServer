@@ -91,20 +91,53 @@ func RunReloclise() {
 			name1, name2 := genCandidates("weighted")
 			ScenesListLock.RUnlock()
 
-			clientNO1 := ClientScenes[name1]
-			clientNO2 := ClientScenes[name2]
-			score1, score2 := scoreClient(clientNO1), scoreClient(clientNO2)
-			if score1 < score2 {
-				name1, name2 = name2, name1
-				clientNO1, clientNO2 = clientNO2, clientNO1
+			RunningScenePairsLock.RLock()
+			_, ok := RunningScenePairs[scenePair{name1, name2}]
+			if ok {
+				RunningScenePairsLock.RUnlock()
+				continue
 			}
+			_, ok = RunningScenePairs[scenePair{name2, name1}]
+			if ok {
+				RunningScenePairsLock.RUnlock()
+				continue
+			}
+			RunningScenePairsLock.RUnlock()
 
-			// do delete candidates scene from PrepareScenesList
-			/*
-				ScenesListLock.Lock()
-				PrepareScenesList = append(PrepareScenesList[:index1], PrepareScenesList[index2+1:]...)
-				ScenesListLock.Unlock()
-			*/
+			RunningScenePairsLock.Lock()
+			RunningScenePairs[scenePair{name1, name2}] = true
+			RunningScenePairs[scenePair{name2, name1}] = true
+			RunningScenePairsLock.Unlock()
+
+			ClientScenesLock.RLock()
+			clients4scene1 := ClientScenes[name1]
+			clients4scene2 := ClientScenes[name2]
+			clientNO1, clientNO2 := -1, -2
+			maxScore := 0.0
+			//choose client 1
+			for k, _ := range clients4scene1 {
+				if _, ok := clients4scene2[k]; ok {
+					clientNO1, clientNO2 = k, k
+					break
+				}
+				score := scoreClient(k)
+				if score > maxScore {
+					maxScore = score
+					clientNO1 = k
+				}
+			}
+			// choose client 2
+			if clientNO1 != clientNO2 {
+				maxScore = 0.0
+				for k, _ := range clients4scene2 {
+					score := scoreClient(k)
+					if score > maxScore {
+						maxScore = score
+						clientNO2 = k
+					}
+				}
+			}
+			ClientScenesLock.RUnlock()
 
 			// send scene info to client
 			clientIP := ClientAddrs[clientNO1]
@@ -139,6 +172,12 @@ func RunReloclise() {
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 				return
 			}
+			if clientNO1 != clientNO2 {
+				ClientScenesLock.Lock()
+				ClientScenes[name2][clientNO1] = true
+				ClientScenesLock.Unlock()
+			}
+
 		}
 		time.Sleep(time.Second * 5)
 	}

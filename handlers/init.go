@@ -14,11 +14,18 @@ var Client1Port, Client2Port string
 var ClientAddrs []string
 var ClientResourceStats [clientCnt]ResourceInfo
 
-var ClientScenes map[string]int
-var globalPoses map[[2]string][2]pose
+var ClientScenes map[string]map[int]bool
+
+var globalPoses map[scenePair][2]pose
 
 var ProcessingScenesList []string
 var ProcessingScenesIndex map[string]int
+
+type scenePair struct {
+	scene1, scene2 string
+}
+
+var RunningScenePairs map[scenePair]bool
 
 var SucceedSceneList []string
 
@@ -26,8 +33,9 @@ var FailedSceneList map[string]map[string]int
 
 var ScenesListLock sync.RWMutex
 var globalPoseLock sync.RWMutex
-
 var resourceInfoLock sync.RWMutex
+var ClientScenesLock sync.RWMutex
+var RunningScenePairsLock sync.RWMutex
 
 var nowClient int32 = -1
 
@@ -65,7 +73,9 @@ func init() {
 	ClientAddrs = append(ClientAddrs, "http://"+Client1Ip+":"+Client1Port)
 	ClientAddrs = append(ClientAddrs, "http://"+Client2Ip+":"+Client2Port)
 
-	ClientScenes = make(map[string]int)
+	ClientScenes = make(map[string]map[int]bool) // save where the scene locate
+
+	RunningScenePairs = make(map[scenePair]bool)
 
 	ProcessingScenesList = []string{}
 	ProcessingScenesIndex = make(map[string]int)
@@ -73,7 +83,7 @@ func init() {
 	SucceedSceneList = []string{}
 
 	FailedSceneList = make(map[string]map[string]int)
-	globalPoses = make(map[[2]string][2]pose)
+	globalPoses = make(map[scenePair][2]pose)
 
 	rand.Seed(time.Now().Unix())
 
