@@ -71,9 +71,6 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			resp_body, _ := ioutil.ReadAll(resp.Body)
 			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(resp_body))
 		}
-		ClientScenesLock.Lock()
-		ClientScenes[sceneName] = map[int]bool{clientNO: true}
-		ClientScenesLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))

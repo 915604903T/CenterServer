@@ -27,6 +27,12 @@ func MakeModelControllerHandler() http.HandlerFunc {
 			ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
 			ProcessingScenesList = append(ProcessingScenesList, sceneName)
 			ScenesListLock.Unlock()
+
+			addr := r.URL.Host
+			clientNO := ClientIpsMap[addr]
+			ClientScenesLock.Lock()
+			ClientScenes[sceneName] = map[int]bool{clientNO: true}
+			ClientScenesLock.Unlock()
 		}
 
 		w.WriteHeader(http.StatusOK)
