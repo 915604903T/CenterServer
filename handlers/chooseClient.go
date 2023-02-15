@@ -15,7 +15,7 @@ func scoreRelocClient(id int) float64 {
 	resourceInfoLock.RLock()
 	resourceInfo := ClientResourceStats[id]
 	resourceInfoLock.RUnlock()
-	if resourceInfo.GPUMemoryFree/1e6 < 4800.0 {
+	if resourceInfo.GPUMemoryFree/1e6 < 5000.0 {
 		return -100.0
 	}
 	score += float64(resourceInfo.MemoryFree) / 1e9
