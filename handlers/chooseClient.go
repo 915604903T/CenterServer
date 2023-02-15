@@ -10,11 +10,30 @@ func chooseSequentialClient() int {
 	return int(atomic.LoadInt32(&nowClient)) % clientCnt
 }
 
+func scoreRelocClient(id int) float64 {
+	score := 0.0
+	resourceInfoLock.RLock()
+	resourceInfo := ClientResourceStats[id]
+	resourceInfoLock.RUnlock()
+	if resourceInfo.GPUMemoryFree/1e6 < 4800.0 {
+		return -100.0
+	}
+	score += float64(resourceInfo.MemoryFree) / 1e9
+	score += float64(resourceInfo.GPUMemoryFree) / 1e9
+	for _, cpu := range resourceInfo.CpuUsage {
+		score += 1 - cpu
+	}
+	return score
+}
+
 func scoreClient(id int) float64 {
 	score := 0.0
 	resourceInfoLock.RLock()
 	resourceInfo := ClientResourceStats[id]
 	resourceInfoLock.RUnlock()
+	if resourceInfo.GPUMemoryFree/1e6 < 2700.0 {
+		return -100.0
+	}
 	score += float64(resourceInfo.MemoryFree) / 1e9
 	score += float64(resourceInfo.GPUMemoryFree) / 1e9
 	for _, cpu := range resourceInfo.CpuUsage {

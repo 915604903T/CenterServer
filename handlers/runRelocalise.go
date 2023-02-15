@@ -109,35 +109,43 @@ func RunReloclise() {
 			RunningScenePairs[scenePair{name2, name1}] = true
 			RunningScenePairsLock.Unlock()
 
-			ClientScenesLock.RLock()
-			clients4scene1 := ClientScenes[name1]
-			clients4scene2 := ClientScenes[name2]
+			maxScore1, maxScore2 := 0.0, 0.0
 			clientNO1, clientNO2 := -1, -2
-			maxScore := 0.0
-			//choose client 1
-			for k, _ := range clients4scene1 {
-				if _, ok := clients4scene2[k]; ok {
-					clientNO1, clientNO2 = k, k
-					break
-				}
-				score := scoreClient(k)
-				if score > maxScore {
-					maxScore = score
-					clientNO1 = k
-				}
-			}
-			// choose client 2
-			if clientNO1 != clientNO2 {
-				maxScore = 0.0
-				for k, _ := range clients4scene2 {
+			// if no available client is ready; wait and continue to choose
+			for ; maxScore1 == 0.0 && maxScore2 == 0.0; time.Sleep(time.Second) {
+				ClientScenesLock.RLock()
+				clients4scene1 := ClientScenes[name1]
+				clients4scene2 := ClientScenes[name2]
+
+				//choose client 1
+				for k, _ := range clients4scene1 {
+					if _, ok := clients4scene2[k]; ok {
+						clientNO1, clientNO2 = k, k
+						break
+					}
 					score := scoreClient(k)
-					if score > maxScore {
-						maxScore = score
-						clientNO2 = k
+					if score > maxScore1 {
+						maxScore1 = score
+						clientNO1 = k
 					}
 				}
+				// choose client 2
+				if clientNO1 != clientNO2 {
+					for k, _ := range clients4scene2 {
+						score := scoreClient(k)
+						if score > maxScore2 {
+							maxScore2 = score
+							clientNO2 = k
+						}
+					}
+				}
+				ClientScenesLock.RUnlock()
 			}
-			ClientScenesLock.RUnlock()
+
+			if maxScore1 < maxScore2 {
+				name1, name2 = name2, name1
+				clientNO1, clientNO2 = clientNO2, clientNO1
+			}
 
 			// send scene info to client
 			clientIP := ClientAddrs[clientNO1]

@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -51,7 +52,12 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		contentType := bodyWriter.FormDataContentType()
 		bodyWriter.Close()
 
-		clientNO := chooseClient("weighted")
+		// if client does not have enough gpu resource; wait to choose
+		clientNO := -1
+		for ; clientNO == -1; time.Sleep(time.Second) {
+			clientNO = chooseClient("weighted")
+		}
+
 		log.Println("[MakeUserFileReceiveHandler] this is client", clientNO, "choose to render ", sceneName)
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
