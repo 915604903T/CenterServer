@@ -73,7 +73,6 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		}
 		ClientScenesLock.Lock()
 		ClientScenes[sceneName] = map[int]bool{clientNO: true}
-		fmt.Println("this is clientScenes: ", ClientScenes)
 		ClientScenesLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
