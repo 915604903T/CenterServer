@@ -73,6 +73,7 @@ func init() {
 	Client2Port = "23335"
 
 	ClientAddrs = []string{}
+	ClientIpsMap = make(map[string]int)
 	count := 0
 	ClientAddrs = append(ClientAddrs, "http://"+Client1Ip+":"+Client1Port)
 	ClientIpsMap["http://"+Client1Ip+":"+Client1Port] = count

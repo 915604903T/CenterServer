@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -116,14 +117,17 @@ func RunReloclise() {
 				ClientScenesLock.RLock()
 				clients4scene1 := ClientScenes[name1]
 				clients4scene2 := ClientScenes[name2]
-
+				ClientScenesLock.RUnlock()
+				fmt.Println("scene1: ", name1, "clients4scene1: ", clients4scene1)
+				fmt.Println("scene2: ", name2, "clients4scene2: ", clients4scene2)
 				//choose client 1
 				for k, _ := range clients4scene1 {
 					if _, ok := clients4scene2[k]; ok {
 						clientNO1, clientNO2 = k, k
 						break
 					}
-					score := scoreClient(k)
+					score := scoreRelocClient(k)
+					fmt.Println("scene1: ", name1, "clientNO1: ", k, "score: ", score)
 					if score > maxScore1 {
 						maxScore1 = score
 						clientNO1 = k
@@ -132,14 +136,20 @@ func RunReloclise() {
 				// choose client 2
 				if clientNO1 != clientNO2 {
 					for k, _ := range clients4scene2 {
-						score := scoreClient(k)
+						score := scoreRelocClient(k)
+						fmt.Println("scene2: ", name2, "clientNO2: ", k, "score: ", score)
 						if score > maxScore2 {
 							maxScore2 = score
 							clientNO2 = k
 						}
 					}
+				}else {
+					score := scoreRelocClient(clilentNO1)
+					if score<0 {
+						continue
+					}
 				}
-				ClientScenesLock.RUnlock()
+				fmt.Println("this is maxScore1: ", maxScore1, "maxScore2: ", maxScore2)
 			}
 
 			if maxScore1 < maxScore2 {
