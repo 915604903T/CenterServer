@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -30,6 +31,7 @@ func MakeModelControllerHandler() http.HandlerFunc {
 
 			addr := r.Host
 			clientNO := ClientIpsMap[addr]
+			fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
 			ClientScenesLock.Lock()
 			ClientScenes[sceneName] = map[int]bool{clientNO: true}
 			ClientScenesLock.Unlock()
