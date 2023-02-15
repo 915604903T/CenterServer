@@ -28,6 +28,9 @@ func genRandomCandidates() (string, string) {
 func scoreCandidate(c1, c2 string) float64 {
 	if FailedSceneList[c1] != nil {
 		if count, ok := FailedSceneList[c1][c2]; ok {
+			if count > 3 { // if failed over 3 times, do not choose these pair
+				return -100.0
+			}
 			return 1.0 / float64(count)
 		}
 	}
@@ -55,19 +58,21 @@ func genWeightedCandidate() (string, string) {
 
 func genWeightedCandidates() (string, string) {
 	maxf := 0.0
-	maxIndex := [2]string{}
+	maxIndex := [2]string{"", ""}
 	for i := 0; i < candidateNum; i++ {
 		c1, c2 := genWeightedCandidate()
 		score := scoreCandidate(c1, c2)
 		if score == 2.0 { // has never failed before
 			return c1, c2
 		}
+		// if candidate failed over 3 times, it will never go into the following branch
 		if maxf < score {
 			maxf = score
 			maxIndex[0] = c1
 			maxIndex[1] = c2
 		}
 	}
+
 	return maxIndex[0], maxIndex[1]
 }
 
@@ -84,14 +89,17 @@ func genCandidates(method string) (string, string) {
 }
 
 func RunReloclise() {
-	for {
+	for ; ; time.Sleep(time.Second * 5) {
 		log.Println("[runRelocalise] preparedScene: ", ProcessingScenesList)
 		if len(ProcessingScenesList) > 0 && len(ProcessingScenesList)+len(SucceedSceneList) >= 2 {
 			// randomly choose scene to relocalise
 			ScenesListLock.RLock()
 			name1, name2 := genCandidates("weighted")
 			ScenesListLock.RUnlock()
-
+			// cannot choose a suitable candidate, then continue
+			if name1 == "" && name2 == "" {
+				continue
+			}
 			RunningScenePairsLock.RLock()
 			_, ok := RunningScenePairs[scenePair{name1, name2}]
 			if ok {
@@ -196,6 +204,5 @@ func RunReloclise() {
 				return
 			}
 		}
-		time.Sleep(time.Second * 5)
 	}
 }
