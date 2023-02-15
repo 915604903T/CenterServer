@@ -121,49 +121,50 @@ func RunReloclise() {
 			maxScore1, maxScore2 := -200.0, -200.0
 			clientNO1, clientNO2 := -1, -2
 			// if no available client is ready; wait and continue to choose
-			for ; maxScore1 < 0 && maxScore2 < 0; time.Sleep(time.Second*3) {
-				log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList)
-				ClientScenesLock.RLock()
-				clients4scene1 := ClientScenes[name1]
-				clients4scene2 := ClientScenes[name2]
-				ClientScenesLock.RUnlock()
-				fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clients4scene1:", clients4scene1)
-				fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clients4scene2:", clients4scene2)
-				maxScore1, maxScore2 = -200.0, -200.0
-				//choose client 1
-				for k, _ := range clients4scene1 {
-					if _, ok := clients4scene2[k]; ok {
-						clientNO1, clientNO2 = k, k
-						break
-					}
+			log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList)
+			ClientScenesLock.RLock()
+			clients4scene1 := ClientScenes[name1]
+			clients4scene2 := ClientScenes[name2]
+			ClientScenesLock.RUnlock()
+			fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clients4scene1:", clients4scene1)
+			fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clients4scene2:", clients4scene2)
+			maxScore1, maxScore2 = -200.0, -200.0
+			//choose client 1
+			for k, _ := range clients4scene1 {
+				if _, ok := clients4scene2[k]; ok {
+					clientNO1, clientNO2 = k, k
+					break
+				}
+				score := scoreRelocClient(k)
+				fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clientNO1:", k, " score:", score)
+				if score > maxScore1 {
+					maxScore1 = score
+					clientNO1 = k
+				}
+			}
+			// choose client 2
+			if clientNO1 != clientNO2 {
+				for k, _ := range clients4scene2 {
 					score := scoreRelocClient(k)
-					fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clientNO1:", k, " score:", score)
-					if score > maxScore1 {
-						maxScore1 = score
-						clientNO1 = k
+					fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clientNO2:", k, " score:", score)
+					if score > maxScore2 {
+						maxScore2 = score
+						clientNO2 = k
 					}
 				}
-				// choose client 2
-				if clientNO1 != clientNO2 {
-					for k, _ := range clients4scene2 {
-						score := scoreRelocClient(k)
-						fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clientNO2:", k, " score:", score)
-						if score > maxScore2 {
-							maxScore2 = score
-							clientNO2 = k
-						}
-					}
-				} else {
-					score := scoreRelocClient(clientNO1)
-					fmt.Println(name1, name2, "runReloclise!!!!!!!!on the same server", clientNO1, " score:", score)
-					if score > maxScore1 {
-						maxScore1, maxScore2 = score, score
-					}
-					if score < 0 {
-						continue
-					}
+			} else {
+				score := scoreRelocClient(clientNO1)
+				fmt.Println(name1, name2, "runReloclise!!!!!!!!on the same server", clientNO1, " score:", score)
+				if score > maxScore1 {
+					maxScore1, maxScore2 = score, score
 				}
-				fmt.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
+				if score < 0 {
+					continue
+				}
+			}
+			fmt.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
+			if maxScore1 < 0 && maxScore2 < 0 { // no available client can do relocalise
+				continue
 			}
 			// always send to high score client to do relocalise
 			if maxScore1 < maxScore2 {
