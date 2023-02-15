@@ -18,24 +18,19 @@ func MakeModelControllerHandler() http.HandlerFunc {
 
 		body, _ := ioutil.ReadAll(r.Body)
 		log.Print("[MakeModelControllerHandler] this is body: ", string(body))
-		if string(body) != "OK" {
-			log.Fatal(body)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		} else {
-			// Add scene to candidate list, the scene name must be unique
-			ScenesListLock.Lock()
-			ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
-			ProcessingScenesList = append(ProcessingScenesList, sceneName)
-			ScenesListLock.Unlock()
 
-			addr := r.Host
-			clientNO := ClientIpsMap[addr]
-			fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
-			ClientScenesLock.Lock()
-			ClientScenes[sceneName] = map[int]bool{clientNO: true}
-			ClientScenesLock.Unlock()
-		}
+		// Add scene to candidate list, the scene name must be unique
+		ScenesListLock.Lock()
+		ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
+		ProcessingScenesList = append(ProcessingScenesList, sceneName)
+		ScenesListLock.Unlock()
+
+		addr := string(body)
+		clientNO := ClientIpsMap[addr]
+		fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
+		ClientScenesLock.Lock()
+		ClientScenes[sceneName] = map[int]bool{clientNO: true}
+		ClientScenesLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 	}
