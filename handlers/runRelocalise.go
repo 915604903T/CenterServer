@@ -102,6 +102,7 @@ func RunReloclise() {
 				continue
 			}
 			RunningScenePairsLock.RLock()
+			fmt.Println("runReloclise!!!!!!!! RunningScenePairs: ", RunningScenePairs)
 			_, ok := RunningScenePairs[scenePair{name1, name2}]
 			if ok {
 				RunningScenePairsLock.RUnlock()
@@ -113,10 +114,6 @@ func RunReloclise() {
 				continue
 			}
 			RunningScenePairsLock.RUnlock()
-			RunningScenePairsLock.Lock()
-			RunningScenePairs[scenePair{name1, name2}] = true
-			RunningScenePairs[scenePair{name2, name1}] = true
-			RunningScenePairsLock.Unlock()
 
 			maxScore1, maxScore2 := -200.0, -200.0
 			clientNO1, clientNO2 := -1, -2
@@ -205,6 +202,10 @@ func RunReloclise() {
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 				return
 			}
+			RunningScenePairsLock.Lock()
+			RunningScenePairs[scenePair{name1, name2}] = true
+			RunningScenePairs[scenePair{name2, name1}] = true
+			RunningScenePairsLock.Unlock()
 		}
 	}
 }
