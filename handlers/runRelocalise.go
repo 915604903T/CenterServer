@@ -172,12 +172,6 @@ func RunReloclise() {
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 				return
 			}
-			if clientNO1 != clientNO2 {
-				ClientScenesLock.Lock()
-				ClientScenes[name2][clientNO1] = true
-				ClientScenesLock.Unlock()
-			}
-
 		}
 		time.Sleep(time.Second * 5)
 	}

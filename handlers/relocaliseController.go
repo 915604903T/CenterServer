@@ -44,6 +44,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			return
 		}
 
+		// save global pose for two scenes
 		poseInfo := globalPose{}
 		err := json.Unmarshal(body, &poseInfo)
 		if err != nil {
@@ -52,7 +53,8 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			return
 		}
 		isExit := false
-		pair := scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name}
+		scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
+		pair := scenePair{scene1, scene2}
 
 		RunningScenePairsLock.Lock()
 		delete(RunningScenePairs, scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name})
@@ -70,6 +72,15 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			globalPoseLock.Unlock()
 		}
 		log.Println("[MakeRelocaliseControllerHandler] this is globalpose struct:\n", poseInfo)
+
+		// if ip1 and ip2 are not the same one, add it to client scenes map
+		ip1, ip2 := poseInfo.Scene1Ip, poseInfo.Scene2Ip
+		if ip1 != ip2 {
+			clientNO1 := ClientIpsMap[ip1]
+			ClientScenesLock.Lock()
+			ClientScenes[scene2][clientNO1] = true
+			ClientScenesLock.Unlock()
+		}
 
 		// delete processed scene from processing list and move to succeedScene
 		ScenesListLock.Lock()

@@ -12,6 +12,7 @@ var Client1Ip, Client2Ip string
 var Client1Port, Client2Port string
 
 var ClientAddrs []string
+var ClientIpsMap map[string]int
 var ClientResourceStats [clientCnt]ResourceInfo
 
 var ClientScenes map[string]map[int]bool
@@ -45,8 +46,10 @@ type pose [4][2]float64
 
 type globalPose struct {
 	Scene1Name string `json:"scene1name"`
+	Scene1Ip   string `json:"scene1ip"`
 	Scene1Pose pose   `json:"scene1pose"`
 	Scene2Name string `json:"scene2name"`
+	Scene2Ip   string `json:"scene2ip"`
 	Scene2Pose pose   `json:"scene2pose"`
 }
 
@@ -70,8 +73,13 @@ func init() {
 	Client2Port = "23335"
 
 	ClientAddrs = []string{}
+	count := 0
 	ClientAddrs = append(ClientAddrs, "http://"+Client1Ip+":"+Client1Port)
+	ClientIpsMap["http://"+Client1Ip+":"+Client1Port] = count
+	count++
 	ClientAddrs = append(ClientAddrs, "http://"+Client2Ip+":"+Client2Port)
+	ClientIpsMap["http://"+Client2Ip+":"+Client2Port] = count
+	count++
 
 	ClientScenes = make(map[string]map[int]bool) // save where the scene locate
 
