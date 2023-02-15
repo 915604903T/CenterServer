@@ -19,6 +19,11 @@ func MakeModelControllerHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		log.Print("[MakeModelControllerHandler] this is body: ", string(body))
 
+		if (string(body)=="Failed") {
+			w.WriteHeader(http.StatusOK)
+			log.Print("Render ", sceneName, "failed")
+			return
+		}
 		// Add scene to candidate list, the scene name must be unique
 		ScenesListLock.Lock()
 		ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
