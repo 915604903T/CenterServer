@@ -143,36 +143,3 @@ func Inverse(S1 Matrix) (MatrixC [][]float64) {
 	}
 	return MatrixC
 }
-
-type DualQuat struct {
-	q [4]float64
-	p [4]float64
-}
-
-func (dq *DualQuat) DualQuat2Pose() Matrix {
-	mat := make([][]float64, 4)
-	for i := 0; i < 4; i++ {
-		mat[i] = make([]float64, 4)
-	}
-	ret := Matrix{4, 4, mat}
-	mat[0][0] = dq.q[0]*dq.q[0] + dq.q[1]*dq.q[1] - dq.q[2]*dq.q[2] - dq.q[3]*dq.q[3]
-	mat[0][1] = 2.0 * (dq.q[1]*dq.q[2] - dq.q[0]*dq.q[3])
-	mat[0][2] = 2.0 * (dq.q[1]*dq.q[3] + dq.q[0]*dq.q[2])
-	mat[0][3] = 2.0 * (dq.q[0]*dq.p[1] - dq.q[1]*dq.p[0] + dq.q[2]*dq.p[3] - dq.q[3]*dq.p[2])
-
-	mat[1][0] = 2.0 * (dq.q[1]*dq.q[2] + dq.q[0]*dq.q[3])
-	mat[1][1] = dq.q[0]*dq.q[0] - dq.q[1]*dq.q[1] + dq.q[2]*dq.q[2] - dq.q[3]*dq.q[3]
-	mat[1][2] = 2.0 * (dq.q[2]*dq.q[3] - dq.q[0]*dq.q[1])
-	mat[1][3] = 2.0 * (dq.q[0]*dq.p[2] - dq.q[1]*dq.p[3] - dq.q[2]*dq.p[0] + dq.q[3]*dq.p[1])
-
-	mat[2][0] = 2.0 * (dq.q[1]*dq.q[3] - dq.q[0]*dq.q[2])
-	mat[2][1] = 2.0 * (dq.q[2]*dq.q[3] + dq.q[0]*dq.q[1])
-	mat[2][2] = dq.q[0]*dq.q[0] - dq.q[1]*dq.q[1] - dq.q[2]*dq.q[2] + dq.q[3]*dq.q[3]
-	mat[2][3] = 2.0 * (dq.q[0]*dq.p[3] + dq.q[1]*dq.p[2] - dq.q[2]*dq.p[1] - dq.q[3]*dq.p[0])
-
-	mat[3][0] = 0.0
-	mat[3][1] = 0.0
-	mat[3][2] = 0.0
-	mat[3][3] = 1.0
-	return ret
-}

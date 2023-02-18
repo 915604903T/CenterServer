@@ -19,7 +19,7 @@ func MakeModelControllerHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		log.Print("[MakeModelControllerHandler] this is body: ", string(body))
 
-		if (string(body)=="Failed") {
+		if string(body) == "Failed" {
 			w.WriteHeader(http.StatusOK)
 			log.Print("Render ", sceneName, "failed")
 			return
@@ -36,6 +36,16 @@ func MakeModelControllerHandler() http.HandlerFunc {
 		ClientScenesLock.Lock()
 		ClientScenes[sceneName] = map[int]bool{clientNO: true}
 		ClientScenesLock.Unlock()
+
+		// init a graph node
+		sceneGraphLock.Lock()
+		sceneGraph[sceneName] = make(map[string]Pose)
+		sceneGraphLock.Unlock()
+
+		// init a union element
+		sceneUnionLock.Lock()
+		sceneUnion.initInsert(sceneName)
+		sceneUnionLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 	}

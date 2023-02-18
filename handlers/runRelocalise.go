@@ -26,9 +26,16 @@ func genRandomCandidates() (string, string) {
 }
 
 func scoreCandidate(c1, c2 string) float64 {
+	sceneUnionLock.Lock()
+	p1, p2 := sceneUnion.find(c1), sceneUnion.find(c2)
+	sceneUnionLock.Unlock()
+	// if they are already in the same mesh component, do not choose them
+	if p1 == p2 {
+		return -100
+	}
 	if FailedSceneList[c1] != nil {
 		if count, ok := FailedSceneList[c1][c2]; ok {
-			if count > 3 { // if failed over 3 times, do not choose these pair
+			if count > 4 { // if failed over 3 times, do not choose these pair
 				return -100.0
 			}
 			return 1.0 / float64(count)
@@ -39,21 +46,15 @@ func scoreCandidate(c1, c2 string) float64 {
 
 func genWeightedCandidate() (string, string) {
 	length := len(ProcessingScenesList)
-	if length >= 2 {
-		index1 := rand.Intn(length)
-		index2 := rand.Intn(length)
-		for index2 == index1 {
-			index2 = rand.Intn(length)
-		}
-		if index2 < index1 {
-			index1, index2 = index2, index1
-		}
-		return ProcessingScenesList[index1], ProcessingScenesList[index2]
-	} else {
-		lengthSucc := len(SucceedSceneList)
-		index2 := rand.Intn(lengthSucc)
-		return ProcessingScenesList[0], SucceedSceneList[index2]
+	index1 := rand.Intn(length)
+	index2 := rand.Intn(length)
+	for index2 == index1 {
+		index2 = rand.Intn(length)
 	}
+	if index2 < index1 {
+		index1, index2 = index2, index1
+	}
+	return ProcessingScenesList[index1], ProcessingScenesList[index2]
 }
 
 func genWeightedCandidates() (string, string) {
@@ -91,7 +92,7 @@ func genCandidates(method string) (string, string) {
 func RunReloclise() {
 	for ; ; time.Sleep(time.Second * 5) {
 		log.Println("[runRelocalise] PrepareScene: ", ProcessingScenesList)
-		if len(ProcessingScenesList) > 0 && len(ProcessingScenesList)+len(SucceedSceneList) >= 2 {
+		if len(ProcessingScenesList) >= 2 {
 			// randomly choose scene to relocalise
 			ScenesListLock.RLock()
 			name1, name2 := genCandidates("weighted")
@@ -197,15 +198,17 @@ func RunReloclise() {
 				return
 			}
 			defer resp.Body.Close()
+
+			RunningScenePairsLock.Lock()
+			RunningScenePairs[scenePair{name1, name2}] = true
+			RunningScenePairs[scenePair{name2, name1}] = true
+			RunningScenePairsLock.Unlock()
+
 			if resp.StatusCode != http.StatusOK {
 				resp_body, _ := ioutil.ReadAll(resp.Body)
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 				return
 			}
-			RunningScenePairsLock.Lock()
-			RunningScenePairs[scenePair{name1, name2}] = true
-			RunningScenePairs[scenePair{name2, name1}] = true
-			RunningScenePairsLock.Unlock()
 		}
 	}
 }

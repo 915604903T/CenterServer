@@ -1,10 +1,8 @@
 package handlers
 
-import (
-	"net/http"
-)
+import "net/http"
 
-func MakeUserQueryHandler() http.HandlerFunc {
+func MakeMeshInfoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
