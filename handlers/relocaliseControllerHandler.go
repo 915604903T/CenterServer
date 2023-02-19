@@ -17,7 +17,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 		if now == scene2 {
 			break
 		}
-		for node, _ := range sceneGraph[now] {
+		for node := range sceneGraph[now] {
 			pre[node] = now
 			q = append(q, node)
 		}

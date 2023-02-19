@@ -128,7 +128,7 @@ func RunReloclise() {
 			fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clients4scene2:", clients4scene2)
 			maxScore1, maxScore2 = -200.0, -200.0
 			//choose client 1
-			for k, _ := range clients4scene1 {
+			for k := range clients4scene1 {
 				if _, ok := clients4scene2[k]; ok {
 					clientNO1, clientNO2 = k, k
 					break
@@ -142,7 +142,7 @@ func RunReloclise() {
 			}
 			// choose client 2
 			if clientNO1 != clientNO2 {
-				for k, _ := range clients4scene2 {
+				for k := range clients4scene2 {
 					score := scoreRelocClient(k)
 					fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clientNO2:", k, " score:", score)
 					if score > maxScore2 {
