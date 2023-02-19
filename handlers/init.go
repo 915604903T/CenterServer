@@ -33,8 +33,9 @@ func init() {
 	sceneUnion = NewUnionSet()
 	sceneGraph = make(map[string]map[string]Pose)
 
-	sceneMesh = make(map[string]MeshInfo)
+	sceneMesh = make(map[string]*MeshInfo)
+
+	RunningMeshes = make(map[*MeshInfo]bool)
 
 	rand.Seed(time.Now().Unix())
-
 }

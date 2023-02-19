@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func bfsFindPath(scene1, scene2 string) []string {
@@ -53,25 +54,49 @@ func findPose(scene1, scene2 string) [4][4]float64 {
 }
 
 func doMeshRequest(scene1, scene2 string) {
-	sceneUnionLock.Lock()
-	pScene1, pScene2 := sceneUnion.find(scene1), sceneUnion.find(scene2)
-	sceneUnionLock.Unlock()
-	// if in the same union, then do not combine the mesh
+	var size1, size2 int
+	var pScene1, pScene2 string
+	var mesh1, mesh2 MeshInfo
+	// check whether the required meshes are occupied
+	for ; ; time.Sleep(time.Second) {
+		sceneUnionLock.Lock()
+		pScene1, pScene2 = sceneUnion.find(scene1), sceneUnion.find(scene2)
+		size1, size2 = sceneUnion.Size[pScene1], sceneUnion.Size[pScene1]
+		sceneUnionLock.Unlock()
+
+		sceneMeshLock.RLock()
+		mesh1, mesh2 := sceneMesh[pScene1], sceneMesh[pScene2]
+		sceneMeshLock.RUnlock()
+
+		RunningMeshesLock.RLock()
+		occupied := RunningMeshes[mesh1] || RunningMeshes[mesh2]
+		RunningMeshesLock.RUnlock()
+		// if both scenes are not running, do following things
+		if !occupied {
+			break
+		}
+	}
+	// if in the same union then do not combine the mesh
 	if pScene1 == pScene2 {
 		return
 	}
+	// if there is just one scene, it is the relocalise result
+	if size1 == 1 && size2 == 1 {
+		sceneUnionLock.Lock()
+		sceneUnion.union(scene1, scene2)
+		sceneUnionLock.Unlock()
+		return
+	}
+	// add to running mesh list
+	RunningMeshesLock.Lock()
+	RunningMeshes[&mesh1] = true
+	RunningMeshes[&mesh2] = true
+	RunningMeshesLock.Unlock()
 	// if in different union, find the path
-	sceneMeshLock.RLock()
-	mesh1, mesh2 := sceneMesh[pScene1], sceneMesh[pScene2]
-	sceneMeshLock.RUnlock()
 	poseM := findPose(mesh1.WorldScene, mesh2.WorldScene)
 	mergeMeshInfo := &MergeMeshInfo{
-		File1Name:  mesh1.FileName,
-		Scenes1:    mesh1.Scenes,
-		File1Ip:    mesh1.Client,
-		File2Name:  mesh2.FileName,
-		Scenes2:    mesh2.Scenes,
-		File2Ip:    mesh2.Client,
+		Mesh1:      mesh1,
+		Mesh2:      mesh2,
 		PoseMatrix: poseM,
 	}
 	content, err := json.Marshal(mergeMeshInfo)
@@ -104,6 +129,10 @@ func doMeshRequest(scene1, scene2 string) {
 		log.Fatal("[doMeshRequest] receive error from mesh: ", resp_body)
 		return
 	}
+	// add to the same union
+	sceneUnionLock.Lock()
+	sceneUnion.union(scene1, scene2)
+	sceneUnionLock.Unlock()
 }
 
 func addGraphEdge(poseInfo globalPose) {
@@ -118,10 +147,6 @@ func addGraphEdge(poseInfo globalPose) {
 	sceneGraph[scene1][scene2] = pose12
 	sceneGraph[scene2][scene1] = pose21
 	sceneGraphLock.Unlock()
-
-	sceneUnionLock.Lock()
-	sceneUnion.union(scene1, scene2)
-	sceneUnionLock.Unlock()
 }
 
 func addMeshInfo(poseInfo globalPose) {
@@ -137,9 +162,10 @@ func addMeshInfo(poseInfo globalPose) {
 		Client:     poseInfo.Scene1Ip,
 	}
 	sceneMeshLock.Lock()
-	sceneMesh[scene1] = meshInfo
-	sceneMesh[scene2] = meshInfo
+	sceneMesh[scene1] = &meshInfo
+	sceneMesh[scene2] = &meshInfo
 	sceneMeshLock.Unlock()
+
 }
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
@@ -151,6 +177,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		bodyStr := string(body)
 		log.Println("receive globalpose: ", bodyStr)
 
+		// do not relocalise
 		if strings.Contains(bodyStr, "failed") {
 			content := strings.Fields(bodyStr)
 			scene1, scene2 := content[0], content[1]

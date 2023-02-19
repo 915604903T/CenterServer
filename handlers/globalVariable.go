@@ -27,8 +27,8 @@ var ProcessingScenesIndex map[string]int // help ProcessingScenesList to delete 
 var ScenesListLock sync.RWMutex
 
 // prevent running the same scene pair at the same time
-var RunningScenePairsLock sync.RWMutex
 var RunningScenePairs map[scenePair]bool
+var RunningScenePairsLock sync.RWMutex
 
 var sceneUnion UnionSet
 var sceneUnionLock sync.Mutex
@@ -37,8 +37,11 @@ var sceneGraph map[string]map[string]Pose // does not have circle in graph
 var sceneGraphLock sync.RWMutex
 
 // find the corresponding mesh of a specific scene
-var sceneMesh map[string]MeshInfo
+var sceneMesh map[string]*MeshInfo
 var sceneMeshLock sync.RWMutex
+
+var RunningMeshes map[*MeshInfo]bool
+var RunningMeshesLock sync.RWMutex
 
 // for random choose client usage
 var nowClient int32 = -1

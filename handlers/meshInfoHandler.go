@@ -9,11 +9,19 @@ import (
 
 func processMeshInfo(info MeshInfo) {
 	// cover origin scene info match
+	originMeshes := make(map[*MeshInfo]bool)
 	sceneMeshLock.Lock()
 	for scene := range info.Scenes {
-		sceneMesh[scene] = info
+		sceneMesh[scene] = &info
+		originMeshes[&info] = true
 	}
 	sceneMeshLock.Unlock()
+
+	RunningMeshesLock.Lock()
+	for mesh := range originMeshes {
+		delete(RunningMeshes, mesh)
+	}
+	RunningMeshesLock.Unlock()
 }
 
 func MakeMeshInfoHandler() http.HandlerFunc {
