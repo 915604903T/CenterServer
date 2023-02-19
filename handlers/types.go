@@ -27,16 +27,18 @@ type ResourceInfo struct {
 }
 
 type MeshInfo struct {
-	scenes     [2]string
-	worldScene string
-	fileName   string
-	client     string
+	Scenes     map[string]bool `json:"scenes"`
+	WorldScene string          `json:"worldscene"`
+	FileName   string          `json:"filename"`
+	Client     string          `json:"client"`
 }
 
 type MergeMeshInfo struct {
-	File1Name  string        `json:"file1name"`
-	File1Ip    string        `json:"file1ip"`
-	File2Name  string        `json:"file2name"`
-	File2Ip    string        `json:"file2ip"`
-	PoseMatrix [4][4]float64 `json:"posematrix"`
+	File1Name  string          `json:"file1name"`
+	Scenes1    map[string]bool `json:"scenes1"`
+	File1Ip    string          `json:"file1ip"`
+	File2Name  string          `json:"file2name"`
+	Scenes2    map[string]bool `json:"scenes2"`
+	File2Ip    string          `json:"file2ip"`
+	PoseMatrix [4][4]float64   `json:"posematrix"`
 }

@@ -61,15 +61,17 @@ func doMeshRequest(scene1, scene2 string) {
 		return
 	}
 	// if in different union, find the path
-	poseM := findPose(scene1, scene2)
 	sceneMeshLock.RLock()
 	mesh1, mesh2 := sceneMesh[pScene1], sceneMesh[pScene2]
 	sceneMeshLock.RUnlock()
+	poseM := findPose(mesh1.WorldScene, mesh2.WorldScene)
 	mergeMeshInfo := &MergeMeshInfo{
-		File1Name:  mesh1.fileName,
-		File1Ip:    mesh1.client,
-		File2Name:  mesh2.fileName,
-		File2Ip:    mesh2.client,
+		File1Name:  mesh1.FileName,
+		Scenes1:    mesh1.Scenes,
+		File1Ip:    mesh1.Client,
+		File2Name:  mesh2.FileName,
+		Scenes2:    mesh2.Scenes,
+		File2Ip:    mesh2.Client,
 		PoseMatrix: poseM,
 	}
 	content, err := json.Marshal(mergeMeshInfo)
@@ -77,7 +79,7 @@ func doMeshRequest(scene1, scene2 string) {
 		log.Println("marshal merge mesh info err: ", err)
 		panic(err)
 	}
-	client1, client2 := mesh1.client, mesh2.client
+	client1, client2 := mesh1.Client, mesh2.Client
 	url := client1 + "/mesh"
 	if client1 != client2 {
 		score1, score2 := scoreMeshClient(ClientIpsMap[client1]), scoreMeshClient(ClientIpsMap[client2])
@@ -124,11 +126,15 @@ func addGraphEdge(poseInfo globalPose) {
 
 func addMeshInfo(poseInfo globalPose) {
 	scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
+	scenes := make(map[string]bool)
+	scenes[scene1] = true
+	scenes[scene2] = true
+	// scene1 is the default world scene
 	meshInfo := MeshInfo{
-		scenes:     [2]string{scene1, scene2},
-		worldScene: scene1,
-		fileName:   scene1 + "-" + scene2 + ".ply",
-		client:     poseInfo.Scene1Ip,
+		Scenes:     scenes,
+		WorldScene: scene1,
+		FileName:   scene1 + "-" + scene2 + ".ply",
+		Client:     poseInfo.Scene1Ip,
 	}
 	sceneMeshLock.Lock()
 	sceneMesh[scene1] = meshInfo
