@@ -83,6 +83,7 @@ func doMeshRequest(scene1, scene2 string) {
 	if pScene1 == pScene2 {
 		return
 	}
+	log.Println("this is sceneUnion size1: ", size1, "size2: ", size2)
 	// if there is just one scene, it is the relocalise result
 	if size1 == 1 && size2 == 1 {
 		sceneUnionLock.Lock()
