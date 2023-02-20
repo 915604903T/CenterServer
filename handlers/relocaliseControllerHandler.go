@@ -62,7 +62,7 @@ func doMeshRequest(scene1, scene2 string) {
 	for ; ; time.Sleep(time.Second) {
 		sceneUnionLock.Lock()
 		pScene1, pScene2 = sceneUnion.find(scene1), sceneUnion.find(scene2)
-		size1, size2 = sceneUnion.Size[pScene1], sceneUnion.Size[pScene1]
+		size1, size2 = sceneUnion.Size[pScene1], sceneUnion.Size[pScene2]
 		sceneUnionLock.Unlock()
 
 		sceneMeshLock.RLock()
