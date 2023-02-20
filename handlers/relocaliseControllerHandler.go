@@ -54,6 +54,7 @@ func findPose(scene1, scene2 string) [4][4]float64 {
 }
 
 func doMeshRequest(scene1, scene2 string) {
+	log.Println("[doMeshRequest] merge", scene1, scene2, " meshes")
 	var size1, size2 int
 	var pScene1, pScene2 string
 	var mesh1, mesh2 *MeshInfo
