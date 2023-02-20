@@ -56,7 +56,7 @@ func findPose(scene1, scene2 string) [4][4]float64 {
 func doMeshRequest(scene1, scene2 string) {
 	var size1, size2 int
 	var pScene1, pScene2 string
-	var mesh1, mesh2 MeshInfo
+	var mesh1, mesh2 *MeshInfo
 	// check whether the required meshes are occupied
 	for ; ; time.Sleep(time.Second) {
 		sceneUnionLock.Lock()
@@ -65,7 +65,7 @@ func doMeshRequest(scene1, scene2 string) {
 		sceneUnionLock.Unlock()
 
 		sceneMeshLock.RLock()
-		mesh1, mesh2 := sceneMesh[pScene1], sceneMesh[pScene2]
+		mesh1, mesh2 = sceneMesh[pScene1], sceneMesh[pScene2]
 		sceneMeshLock.RUnlock()
 
 		RunningMeshesLock.RLock()
@@ -89,14 +89,14 @@ func doMeshRequest(scene1, scene2 string) {
 	}
 	// add to running mesh list
 	RunningMeshesLock.Lock()
-	RunningMeshes[&mesh1] = true
-	RunningMeshes[&mesh2] = true
+	RunningMeshes[mesh1] = true
+	RunningMeshes[mesh2] = true
 	RunningMeshesLock.Unlock()
 	// if in different union, find the path
 	poseM := findPose(mesh1.WorldScene, mesh2.WorldScene)
 	mergeMeshInfo := &MergeMeshInfo{
-		Mesh1:      mesh1,
-		Mesh2:      mesh2,
+		Mesh1:      *mesh1,
+		Mesh2:      *mesh2,
 		PoseMatrix: poseM,
 	}
 	log.Println("!!!!!!!!!!!!!mesh 1111111111 info: ", mesh1)
