@@ -99,6 +99,8 @@ func doMeshRequest(scene1, scene2 string) {
 		Mesh2:      mesh2,
 		PoseMatrix: poseM,
 	}
+	log.Println("!!!!!!!!!!!!!mesh 1111111111 info: ", mesh1)
+	log.Println("!!!!!!!!!!!!!mesh  2222222222222 info: ", mesh2)
 	content, err := json.Marshal(mergeMeshInfo)
 	if err != nil {
 		log.Println("marshal merge mesh info err: ", err)
@@ -161,6 +163,7 @@ func addMeshInfo(poseInfo globalPose) {
 		FileName:   scene1 + "-" + scene2 + ".ply",
 		Client:     poseInfo.Scene1Ip,
 	}
+	log.Println("!!!!!!!!!!!!!add mesh info: ", meshInfo)
 	sceneMeshLock.Lock()
 	sceneMesh[scene1] = &meshInfo
 	sceneMesh[scene2] = &meshInfo
