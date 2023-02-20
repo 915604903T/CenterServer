@@ -16,7 +16,7 @@ func scoreMeshClient(id int) float64 {
 	resourceInfo := ClientResourceStats[id]
 	resourceInfoLock.RUnlock()
 	score += float64(resourceInfo.MemoryFree) / 1e9
-	score += float64(resourceInfo.GPUMemoryFree) / 1e9
+	score += float64(resourceInfo.GPUMemoryFree) / 1e7
 	for _, cpu := range resourceInfo.CpuUsage {
 		score += 1 - cpu
 	}
@@ -32,7 +32,7 @@ func scoreRelocClient(id int) float64 {
 		return -100.0
 	}
 	score += float64(resourceInfo.MemoryFree) / 1e9
-	score += float64(resourceInfo.GPUMemoryFree) / 1e9
+	score += float64(resourceInfo.GPUMemoryFree) / 1e7
 	for _, cpu := range resourceInfo.CpuUsage {
 		score += 1 - cpu
 	}
@@ -48,7 +48,7 @@ func scoreRenderClient(id int) float64 {
 		return -100.0
 	}
 	score += float64(resourceInfo.MemoryFree) / 1e9
-	score += float64(resourceInfo.GPUMemoryFree) / 1e9
+	score += float64(resourceInfo.GPUMemoryFree) / 1e7
 	for _, cpu := range resourceInfo.CpuUsage {
 		score += 1 - cpu
 	}
@@ -80,3 +80,4 @@ func chooseClient(method string) int {
 		return -1
 	}
 }
+

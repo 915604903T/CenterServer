@@ -104,6 +104,7 @@ func doMeshRequest(scene1, scene2 string) {
 		log.Println("marshal merge mesh info err: ", err)
 		panic(err)
 	}
+	log.Println("[doMeshRequest] this is send content: ", content)
 	client1, client2 := mesh1.Client, mesh2.Client
 	url := client1 + "/mesh"
 	if client1 != client2 {
@@ -112,6 +113,7 @@ func doMeshRequest(scene1, scene2 string) {
 			url = client2 + "/mesh"
 		}
 	}
+	log.Println("[doMeshRequest] request merge mesh url: ", url)
 	buf := bytes.NewBuffer([]byte(content))
 	request, err := http.NewRequest("GET", url, buf)
 	if err != nil {
@@ -240,3 +242,4 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
