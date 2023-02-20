@@ -68,16 +68,18 @@ func doMeshRequest(scene1, scene2 string) {
 		sceneMeshLock.RLock()
 		mesh1, mesh2 = sceneMesh[pScene1], sceneMesh[pScene2]
 		sceneMeshLock.RUnlock()
-
+		log.Println("[doMeshRequest] verify if mesh is occupied: ", mesh1.FileName, mesh2.FileName)
 		RunningMeshesLock.RLock()
 		occupied := RunningMeshes[mesh1] || RunningMeshes[mesh2]
 		RunningMeshesLock.RUnlock()
 		// if both scenes are not running, do following things
+		log.Println("[doMeshRequest] verify if mesh is occupied: ", mesh1.FileName, mesh2.FileName, " status:", occupied)
 		if !occupied {
 			break
 		}
 	}
 	// if in the same union then do not combine the mesh
+	log.Println("[doMeshRequest] scene1:", scene1, "p1:", pScene1, " scene2:", scene2, "p2:", pScene2)
 	if pScene1 == pScene2 {
 		return
 	}
@@ -85,6 +87,7 @@ func doMeshRequest(scene1, scene2 string) {
 	if size1 == 1 && size2 == 1 {
 		sceneUnionLock.Lock()
 		sceneUnion.union(scene1, scene2)
+		log.Println("[doMeshRequest] union: ", sceneUnion)
 		sceneUnionLock.Unlock()
 		return
 	}
@@ -137,6 +140,7 @@ func doMeshRequest(scene1, scene2 string) {
 	// add to the same union
 	sceneUnionLock.Lock()
 	sceneUnion.union(scene1, scene2)
+	log.Println("[doMeshRequest] after send union: ", sceneUnion)
 	sceneUnionLock.Unlock()
 }
 
