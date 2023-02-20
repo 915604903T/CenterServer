@@ -137,12 +137,10 @@ func doMeshRequest(scene1, scene2 string) {
 
 func addGraphEdge(poseInfo globalPose) {
 	scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
-	pose21 := poseInfo.Transform
-	pose12Mat := Inverse(pose21.GetM())
-	pose12 := Pose{
-		Matrix: pose12Mat,
-		HasM:   true,
-	}
+	pose12 := poseInfo.Transform
+	pose21Mat := Inverse(pose12.GetM())
+	pose21 := NewPoseMatrix(pose21Mat)
+
 	sceneGraphLock.Lock()
 	sceneGraph[scene1][scene2] = pose12
 	sceneGraph[scene2][scene1] = pose21
