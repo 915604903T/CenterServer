@@ -97,13 +97,13 @@ func RunReloclise() {
 			ScenesListLock.RLock()
 			name1, name2 := genCandidates("weighted")
 			ScenesListLock.RUnlock()
-			fmt.Println("runReloclise!!!!!!!! scene pair: ", name1, name2)
+			fmt.Println("[runRelocalise] scene pair: ", name1, name2)
 			// cannot choose a suitable candidate, then continue
 			if name1 == "" && name2 == "" {
 				continue
 			}
 			RunningScenePairsLock.RLock()
-			fmt.Println("runReloclise!!!!!!!! RunningScenePairs: ", RunningScenePairs)
+			// fmt.Println("runReloclise!!!!!!!! RunningScenePairs: ", RunningScenePairs)
 			_, ok := RunningScenePairs[scenePair{name1, name2}]
 			if ok {
 				RunningScenePairsLock.RUnlock()
@@ -124,8 +124,8 @@ func RunReloclise() {
 			clients4scene1 := ClientScenes[name1]
 			clients4scene2 := ClientScenes[name2]
 			ClientScenesLock.RUnlock()
-			fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clients4scene1:", clients4scene1)
-			fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clients4scene2:", clients4scene2)
+			fmt.Println("[runRelocalise] scene1:", name1, " clients4scene1:", clients4scene1)
+			fmt.Println("[runRelocalise] scene2:", name2, " clients4scene2:", clients4scene2)
 			maxScore1, maxScore2 = -200.0, -200.0
 			//choose client 1
 			for k := range clients4scene1 {
@@ -134,7 +134,7 @@ func RunReloclise() {
 					break
 				}
 				score := scoreRelocClient(k)
-				fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clientNO1:", k, " score:", score)
+				// fmt.Println("runReloclise!!!!!!!!scene1:", name1, " clientNO1:", k, " score:", score)
 				if score > maxScore1 {
 					maxScore1 = score
 					clientNO1 = k
@@ -144,7 +144,7 @@ func RunReloclise() {
 			if clientNO1 != clientNO2 {
 				for k := range clients4scene2 {
 					score := scoreRelocClient(k)
-					fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clientNO2:", k, " score:", score)
+					// fmt.Println("runReloclise!!!!!!!!scene2:", name2, " clientNO2:", k, " score:", score)
 					if score > maxScore2 {
 						maxScore2 = score
 						clientNO2 = k
@@ -152,7 +152,7 @@ func RunReloclise() {
 				}
 			} else {
 				score := scoreRelocClient(clientNO1)
-				fmt.Println(name1, name2, "runReloclise!!!!!!!!on the same server", clientNO1, " score:", score)
+				// fmt.Println(name1, name2, "runReloclise!!!!!!!!on the same server", clientNO1, " score:", score)
 				if score > maxScore1 {
 					maxScore1, maxScore2 = score, score
 				}
@@ -160,7 +160,7 @@ func RunReloclise() {
 					continue
 				}
 			}
-			fmt.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
+			// fmt.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
 			if maxScore1 < 0 && maxScore2 < 0 { // no available client can do relocalise
 				continue
 			}
