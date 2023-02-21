@@ -214,7 +214,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			}
 			RunningScenePairsLock.Unlock()
 
-			log.Println("[MakeRelocaliseControllerHandler] add ", scene1, scene2, "to failedList")
+			log.Println("[MakeRelocaliseControllerHandler] add ", scene1, scene2, "to failedList and remove from running list")
 			w.WriteHeader(http.StatusOK)
 			return
 		}
@@ -246,7 +246,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		delete(RunningScenePairs, scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name})
 		delete(RunningScenePairs, scenePair{poseInfo.Scene2Name, poseInfo.Scene1Name})
 		RunningScenePairsLock.Unlock()
-
+		log.Println("[MakeRelocaliseControllerHandler] remove from running list: ", poseInfo.Scene1Name, poseInfo.Scene2Name)
 		log.Println("[MakeRelocaliseControllerHandler] this is globalpose struct:\n", poseInfo)
 
 		// if ip1 and ip2 are not the same one, add it to client scenes map
