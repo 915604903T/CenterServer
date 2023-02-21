@@ -15,6 +15,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 	q := []string{scene1}
 	for len(q) > 0 {
 		now := q[0]
+		q = q[1:]
 		if now == scene2 {
 			break
 		}
@@ -38,6 +39,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 func findPose(scene1, scene2 string) [4][4]float64 {
 	log.Println("[findPose] begin find pose:", scene1, scene2)
 	sceneGraphLock.RLock()
+	log.Println("[findPose] get sceneGraph Lock:", scene1, scene2)
 	path := bfsFindPath(scene1, scene2)
 	poseMat := [4][4]float64{
 		{1.0, 0.0, 0.0, 0.0},
@@ -99,7 +101,7 @@ func doMeshRequest(scene1, scene2 string) {
 	RunningMeshes[mesh1] = true
 	RunningMeshes[mesh2] = true
 	RunningMeshesLock.Unlock()
-	log.Println("[doMeshRequest] add to mesh to running meshes")
+	log.Println("[doMeshRequest] add to mesh to running meshes: ", mesh1.WorldScene, mesh2.WorldScene)
 	// if in different union, find the path
 	poseM := findPose(mesh1.WorldScene, mesh2.WorldScene)
 	mergeMeshInfo := &MergeMeshInfo{
