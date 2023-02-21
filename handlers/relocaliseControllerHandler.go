@@ -171,8 +171,12 @@ func addMeshInfo(poseInfo globalPose) {
 	}
 	log.Println("!!!!!!!!!!!!!add mesh info: ", meshInfo)
 	sceneMeshLock.Lock()
-	sceneMesh[scene1] = &meshInfo
-	sceneMesh[scene2] = &meshInfo
+	if _, ok := sceneMesh[scene1]; !ok {
+		sceneMesh[scene1] = &meshInfo
+	}
+	if _, ok := sceneMesh[scene2]; !ok {
+		sceneMesh[scene2] = &meshInfo
+	}
 	sceneMeshLock.Unlock()
 
 }
