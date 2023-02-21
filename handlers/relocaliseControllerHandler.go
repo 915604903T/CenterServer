@@ -217,6 +217,11 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		if bodyStr == "not successfully run" {
+			log.Println("[MakeRelocaliseControllerHandler] error run relocalise program")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 
 		// save global pose for two scenes
 		poseInfo := globalPose{}
