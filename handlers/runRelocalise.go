@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -97,7 +96,7 @@ func RunReloclise() {
 			ScenesListLock.RLock()
 			name1, name2 := genCandidates("weighted")
 			ScenesListLock.RUnlock()
-			fmt.Println("[runRelocalise] scene pair: ", name1, name2)
+			log.Println("[runRelocalise] scene pair: ", name1, name2)
 			// cannot choose a suitable candidate, then continue
 			if name1 == "" && name2 == "" {
 				continue
@@ -124,8 +123,8 @@ func RunReloclise() {
 			clients4scene1 := ClientScenes[name1]
 			clients4scene2 := ClientScenes[name2]
 			ClientScenesLock.RUnlock()
-			fmt.Println("[runRelocalise] scene1:", name1, " clients4scene1:", clients4scene1)
-			fmt.Println("[runRelocalise] scene2:", name2, " clients4scene2:", clients4scene2)
+			log.Println("[runRelocalise] scene1:", name1, " clients4scene1:", clients4scene1)
+			log.Println("[runRelocalise] scene2:", name2, " clients4scene2:", clients4scene2)
 			maxScore1, maxScore2 = -200.0, -200.0
 			//choose client 1
 			for k := range clients4scene1 {
@@ -160,7 +159,7 @@ func RunReloclise() {
 					continue
 				}
 			}
-			// fmt.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
+			log.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
 			if maxScore1 < 0 && maxScore2 < 0 { // no available client can do relocalise
 				continue
 			}
