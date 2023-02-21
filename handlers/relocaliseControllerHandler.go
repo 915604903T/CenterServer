@@ -68,7 +68,6 @@ func doMeshRequest(scene1, scene2 string) {
 		sceneMeshLock.RLock()
 		mesh1, mesh2 = sceneMesh[pScene1], sceneMesh[pScene2]
 		sceneMeshLock.RUnlock()
-		log.Println("[doMeshRequest] verify if mesh is occupied: ", mesh1.FileName, mesh2.FileName)
 		RunningMeshesLock.RLock()
 		occupied := RunningMeshes[mesh1] || RunningMeshes[mesh2]
 		RunningMeshesLock.RUnlock()
@@ -81,14 +80,15 @@ func doMeshRequest(scene1, scene2 string) {
 	// if in the same union then do not combine the mesh
 	log.Println("[doMeshRequest] scene1:", scene1, "p1:", pScene1, " scene2:", scene2, "p2:", pScene2)
 	if pScene1 == pScene2 {
+		log.Println("[doMeshRequest] because in the same union: ", scene1, scene2, " then return")
 		return
 	}
-	log.Println("this is sceneUnion size1: ", size1, "size2: ", size2)
+	log.Println("[doMeshRequest] this is sceneUnion size1: ", size1, "size2: ", size2)
 	// if there is just one scene, it is the relocalise result
 	if size1 == 1 && size2 == 1 {
 		sceneUnionLock.Lock()
 		sceneUnion.union(scene1, scene2)
-		log.Println("[doMeshRequest] union: ", sceneUnion)
+		log.Println("[doMeshRequest] in the same size union: ", sceneUnion)
 		sceneUnionLock.Unlock()
 		return
 	}
@@ -97,6 +97,7 @@ func doMeshRequest(scene1, scene2 string) {
 	RunningMeshes[mesh1] = true
 	RunningMeshes[mesh2] = true
 	RunningMeshesLock.Unlock()
+	log.Println("[doMeshRequest] add to mesh to running meshes")
 	// if in different union, find the path
 	poseM := findPose(mesh1.WorldScene, mesh2.WorldScene)
 	mergeMeshInfo := &MergeMeshInfo{
@@ -104,11 +105,11 @@ func doMeshRequest(scene1, scene2 string) {
 		Mesh2:      *mesh2,
 		PoseMatrix: poseM,
 	}
-	log.Println("!!!!!!!!!!!!!mesh 1111111111 info: ", mesh1)
-	log.Println("!!!!!!!!!!!!!mesh  2222222222222 info: ", mesh2)
+	log.Println("[doMeshRequest] !!!!!!!!!!!!!mesh 1111111111 info: ", mesh1)
+	log.Println("[doMeshRequest] !!!!!!!!!!!!!mesh  2222222222222 info: ", mesh2)
 	content, err := json.Marshal(mergeMeshInfo)
 	if err != nil {
-		log.Println("marshal merge mesh info err: ", err)
+		log.Println("[doMeshRequest] marshal merge mesh info err: ", err)
 		panic(err)
 	}
 	log.Println("[doMeshRequest] this is send content: ", content)
@@ -124,12 +125,12 @@ func doMeshRequest(scene1, scene2 string) {
 	buf := bytes.NewBuffer([]byte(content))
 	request, err := http.NewRequest("GET", url, buf)
 	if err != nil {
-		log.Println("generate request err: ", err)
+		log.Println("[doMeshRequest] generate request err: ", err)
 		panic(err)
 	}
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
-		log.Println("get mesh response err: ", err)
+		log.Println("[doMeshRequest] get mesh response err: ", err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -188,7 +189,7 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 
 		body, _ := ioutil.ReadAll(r.Body)
 		bodyStr := string(body)
-		log.Println("receive globalpose: ", bodyStr)
+		log.Println("[MakeRelocaliseControllerHandler] receive globalpose:\n\n", bodyStr)
 
 		// do not relocalise
 		if strings.Contains(bodyStr, "failed") {

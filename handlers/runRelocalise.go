@@ -99,18 +99,20 @@ func RunReloclise() {
 			log.Println("[runRelocalise] scene pair: ", name1, name2)
 			// cannot choose a suitable candidate, then continue
 			if name1 == "" && name2 == "" {
+				log.Println("[runRelocalise] invalid candidate")
 				continue
 			}
 			RunningScenePairsLock.RLock()
-			// fmt.Println("runReloclise!!!!!!!! RunningScenePairs: ", RunningScenePairs)
 			_, ok := RunningScenePairs[scenePair{name1, name2}]
 			if ok {
 				RunningScenePairsLock.RUnlock()
+				log.Println("[runRelocalise] ", name1, name2, "scene pair is running")
 				continue
 			}
 			_, ok = RunningScenePairs[scenePair{name2, name1}]
 			if ok {
 				RunningScenePairsLock.RUnlock()
+				log.Println("[runRelocalise] ", name1, name2, "scene pair is running")
 				continue
 			}
 			RunningScenePairsLock.RUnlock()
@@ -159,8 +161,9 @@ func RunReloclise() {
 					continue
 				}
 			}
-			log.Println("runReloclise!!!!!!!!maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
+			log.Println("[runReloclise] maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
 			if maxScore1 < 0 && maxScore2 < 0 { // no available client can do relocalise
+				log.Println("[runReloclise] no available client to run")
 				continue
 			}
 			// always send to high score client to do relocalise
@@ -179,7 +182,7 @@ func RunReloclise() {
 				ClientAddrs[clientNO2],
 			}
 			log.Println("[runRelocalise] this is relocalise info: \n", info)
-			log.Println("[runRelocalise] send to url: ", url)
+			log.Println("[runRelocalise] !!!!send to url: ", url)
 			infoStr, err := json.Marshal(info)
 			if err != nil {
 				log.Fatal(err)
@@ -202,7 +205,7 @@ func RunReloclise() {
 			RunningScenePairs[scenePair{name1, name2}] = true
 			RunningScenePairs[scenePair{name2, name1}] = true
 			RunningScenePairsLock.Unlock()
-
+			log.Println("[runRelocalise] remove scene pair from running list:", name1, name2)
 			if resp.StatusCode != http.StatusOK {
 				resp_body, _ := ioutil.ReadAll(resp.Body)
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
