@@ -26,9 +26,9 @@ func processMeshInfo(info MeshInfo) {
 
 func MakeMeshInfoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("[MakeMeshInfoHandler] receive client merge finish request")
 		defer r.Body.Close()
 		body, _ := ioutil.ReadAll(r.Body)
+		log.Print("[MakeMeshInfoHandler] receive client merge finish request:\n", string(body))
 		meshInfo := MeshInfo{}
 		err := json.Unmarshal(body, &meshInfo)
 		if err != nil {
