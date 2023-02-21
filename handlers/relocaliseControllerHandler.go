@@ -11,6 +11,7 @@ import (
 )
 
 func bfsFindPath(scene1, scene2 string) []string {
+	log.Println("[bfsFindPath] ", scene1, scene2)
 	pre := map[string]string{}
 	q := []string{scene1}
 	for len(q) > 0 {
@@ -24,6 +25,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 			q = append(q, node)
 		}
 	}
+	log.Println("[bfsFindPath] after find path", scene1, scene2)
 	path := []string{scene2}
 	idx := scene2
 	for {
@@ -33,6 +35,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 			break
 		}
 	}
+	log.Println("[bfsFindPath] return path", scene1, scene2)
 	return path
 }
 
