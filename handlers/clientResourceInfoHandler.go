@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -16,7 +15,7 @@ func MakeClientResourceInfoHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
-		log.Println("[MakeClientResourceInfoHandler] receive", id, "client resource")
+		// log.Println("[MakeClientResourceInfoHandler] receive", id, "client resource")
 		// log.Print("[MakeClientResourceInfoHandler]", id, "client resource: ", string(body))
 		resourceInfo := ResourceInfo{}
 		err := json.Unmarshal(body, &resourceInfo)
