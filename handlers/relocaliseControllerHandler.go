@@ -31,6 +31,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 	for {
 		if preNode, ok := pre[idx]; ok {
 			path = append(path, preNode)
+			idx = preNode
 		} else {
 			break
 		}
