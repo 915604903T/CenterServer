@@ -36,6 +36,7 @@ func bfsFindPath(scene1, scene2 string) []string {
 }
 
 func findPose(scene1, scene2 string) [4][4]float64 {
+	log.Println("[findPose] begin find pose:", scene1, scene2)
 	sceneGraphLock.RLock()
 	path := bfsFindPath(scene1, scene2)
 	poseMat := [4][4]float64{
@@ -50,6 +51,7 @@ func findPose(scene1, scene2 string) [4][4]float64 {
 		poseMat = Mul(poseM, poseMat)
 	}
 	sceneGraphLock.RUnlock()
+	log.Println("[findPose] after find pose", scene1, scene2)
 	return poseMat
 }
 
@@ -151,11 +153,12 @@ func addGraphEdge(poseInfo globalPose) {
 	pose12 := poseInfo.Transform
 	pose21Mat := Inverse(pose12.GetM())
 	pose21 := NewPoseMatrix(pose21Mat)
-
+	log.Println("[addGraphEdge] add scene graph edge: ", scene1, scene2)
 	sceneGraphLock.Lock()
 	sceneGraph[scene1][scene2] = pose12
 	sceneGraph[scene2][scene1] = pose21
 	sceneGraphLock.Unlock()
+	log.Println("[addGraphEdge] after add scene graph edge: ", scene1, scene2)
 }
 
 func addMeshInfo(poseInfo globalPose) {
