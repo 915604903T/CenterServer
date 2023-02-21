@@ -116,7 +116,7 @@ func doMeshRequest(scene1, scene2 string) {
 		log.Println("[doMeshRequest] marshal merge mesh info err: ", err)
 		panic(err)
 	}
-	log.Println("[doMeshRequest] this is send content: ", content)
+	log.Println("[doMeshRequest] this is send content: ", string(content))
 	client1, client2 := mesh1.Client, mesh2.Client
 	url := client1 + "/mesh"
 	if client1 != client2 {
