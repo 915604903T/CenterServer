@@ -204,7 +204,7 @@ func RunReloclise() {
 			RunningScenePairs[scenePair{name1, name2}] = true
 			RunningScenePairs[scenePair{name2, name1}] = true
 			RunningScenePairsLock.Unlock()
-			log.Println("[runRelocalise] add scene pair from running list:", name1, name2)
+			log.Println("[runRelocalise] add scene pair to running list:", name1, name2)
 			if resp.StatusCode != http.StatusOK {
 				resp_body, _ := ioutil.ReadAll(resp.Body)
 				log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)

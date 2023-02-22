@@ -12,6 +12,14 @@ import (
 
 func bfsFindPath(scene1, scene2 string) []string {
 	log.Println("[bfsFindPath] ", scene1, scene2)
+	log.Println("[bfsFindPath] before find path sceneGraph")
+	for k, v := range sceneGraph {
+		log.Println("[bfsFindPath] ", k,":")
+		for v1:=range v {
+			log.Println(v1)
+		}
+	}
+	log.Println("\n")
 	pre := map[string]string{}
 	q := []string{scene1}
 	for len(q) > 0 {
@@ -28,6 +36,14 @@ func bfsFindPath(scene1, scene2 string) []string {
 	log.Println("[bfsFindPath] after find path", scene1, scene2)
 	path := []string{scene2}
 	idx := scene2
+	log.Println("[bfsFindPath] sceneGraph: ")
+	for k, v := range sceneGraph {
+		log.Println("[bfsFindPath] ", k, ":")
+		for v1:= range v {
+			log.Println(v1)
+		}
+	}
+	log.Println("\n[bfsFindPath] preNodes: ", pre)
 	for {
 		if preNode, ok := pre[idx]; ok {
 			path = append(path, preNode)
@@ -88,7 +104,7 @@ func doMeshRequest(scene1, scene2 string) {
 	// if in the same union then do not combine the mesh
 	log.Println("[doMeshRequest] scene1:", scene1, "p1:", pScene1, " scene2:", scene2, "p2:", pScene2)
 	if pScene1 == pScene2 {
-		log.Println("[doMeshRequest] because in the same union: ", scene1, scene2, " then return")
+		log.Println("[doMeshRequest] parent equal in the same union: ", scene1, scene2, " then return")
 		return
 	}
 	log.Println("[doMeshRequest] this is sceneUnion size1: ", size1, "size2: ", size2)
