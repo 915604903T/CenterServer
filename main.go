@@ -13,6 +13,7 @@ func main() {
 		ModelControllerHandler:      handlers.MakeModelControllerHandler(),
 		RelocaliseControllerHandler: handlers.MakeRelocaliseControllerHandler(),
 		ClientResourceInfoHandler:   handlers.MakeClientResourceInfoHandler(),
+		MeshInfoHandler:             handlers.MakeMeshInfoHandler(),
 	}
 	// run a go routine for periodly do relocalisation if candidates exist
 	go handlers.RunReloclise()

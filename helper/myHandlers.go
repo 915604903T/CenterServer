@@ -13,6 +13,6 @@ type MyHandlers struct {
 	RelocaliseControllerHandler http.HandlerFunc
 	// Deal with client node resource info
 	ClientResourceInfoHandler http.HandlerFunc
-	// Deal with user query for reconstructions TODO()
-	UserQueryHandler http.HandlerFunc
+	// Deal with mesh return info
+	MeshInfoHandler http.HandlerFunc
 }
