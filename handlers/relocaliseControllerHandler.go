@@ -276,4 +276,3 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
-
