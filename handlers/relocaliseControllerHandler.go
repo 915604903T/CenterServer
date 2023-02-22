@@ -12,16 +12,9 @@ import (
 
 func bfsFindPath(scene1, scene2 string) []string {
 	log.Println("[bfsFindPath] ", scene1, scene2)
-	log.Println("[bfsFindPath] before find path sceneGraph")
-	for k, v := range sceneGraph {
-		log.Println("[bfsFindPath] ", k,":")
-		for v1:=range v {
-			log.Println(v1)
-		}
-	}
-	log.Println("\n")
 	pre := map[string]string{}
 	q := []string{scene1}
+	vis := map[string]bool{scene1: true}
 	for len(q) > 0 {
 		now := q[0]
 		q = q[1:]
@@ -29,6 +22,10 @@ func bfsFindPath(scene1, scene2 string) []string {
 			break
 		}
 		for node := range sceneGraph[now] {
+			if vis[node] {
+				continue
+			}
+			vis[node] = true
 			pre[node] = now
 			q = append(q, node)
 		}
@@ -36,13 +33,6 @@ func bfsFindPath(scene1, scene2 string) []string {
 	log.Println("[bfsFindPath] after find path", scene1, scene2)
 	path := []string{scene2}
 	idx := scene2
-	log.Println("[bfsFindPath] sceneGraph: ")
-	for k, v := range sceneGraph {
-		log.Println("[bfsFindPath] ", k, ":")
-		for v1:= range v {
-			log.Println(v1)
-		}
-	}
 	log.Println("\n[bfsFindPath] preNodes: ", pre)
 	for {
 		if preNode, ok := pre[idx]; ok {
@@ -286,4 +276,3 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
-
