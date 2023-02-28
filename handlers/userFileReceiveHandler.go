@@ -3,15 +3,17 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"image"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/nfnt/resize"
 )
 
 func MakeUserFileReceiveHandler() http.HandlerFunc {
@@ -25,6 +27,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 
 		// os.Mkdir(sceneName, 0644)
 		// read multiple files
+
 		reader, err := r.MultipartReader()
 		bodyBuffer := &bytes.Buffer{}
 		bodyWriter := multipart.NewWriter(bodyBuffer)
@@ -44,9 +47,23 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 				fmt.Printf("FormData=[%s]\n", string(data))
 			} else { // This is FileData
 				//Filename contains the directory
-				name := filepath.Join(sceneName, part.FileName())
+				name := sceneName + "/" + part.FileName()
 				fileWriter, _ := bodyWriter.CreateFormFile("files", name)
-				io.Copy(fileWriter, part)
+				var data []byte
+				_, err := part.Read(data)
+				if err != nil {
+					log.Println(name, "part read err: ", err)
+					panic(err)
+				}
+				img, format, _ := image.Decode(bytes.NewReader(data))
+				log.Println("this is ", name, "format: ", format)
+				resizeImg := resize.Resize(uint(img.Bounds().Max.X/2), 0, img, resize.NearestNeighbor)
+				err = png.Encode(fileWriter, resizeImg)
+				if err != nil {
+					log.Println("write ", name, "to body err: ", err)
+					panic(err)
+				}
+				// io.Copy(fileWriter, part)
 			}
 		}
 		contentType := bodyWriter.FormDataContentType()
@@ -62,6 +79,9 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
 		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url)
+		// contentType := r.Header["Content-Type"][0]
+		// log.Println("content type: ", contentType)
+		// resp, err := http.Post(url, contentType, r.Body)
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)

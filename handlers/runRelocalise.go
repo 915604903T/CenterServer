@@ -34,7 +34,7 @@ func scoreCandidate(c1, c2 string) float64 {
 	}
 	if FailedSceneList[c1] != nil {
 		if count, ok := FailedSceneList[c1][c2]; ok {
-			if count > 4 { // if failed over 3 times, do not choose these pair
+			if count > 3 { // if failed over 3 times, do not choose these pair
 				return -100.0
 			}
 			return 1.0 / float64(count)
@@ -89,8 +89,9 @@ func genCandidates(method string) (string, string) {
 }
 
 func RunReloclise() {
-	for ; ; time.Sleep(time.Second * 5) {
+	for ; ; time.Sleep(time.Second * 8) {
 		log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList)
+
 		if len(ProcessingScenesList) >= 2 {
 			// randomly choose scene to relocalise
 			ScenesListLock.RLock()
@@ -213,4 +214,3 @@ func RunReloclise() {
 		}
 	}
 }
-

@@ -199,6 +199,11 @@ func addMeshInfo(poseInfo globalPose) {
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		RelocaliseCntLock.Lock()
+		RelocaliseCnt++
+		log.Println("[runRelocalise] Relocalise Times: ", RelocaliseCnt)
+
+		RelocaliseCntLock.Unlock()
 		log.Print("[MakeRelocaliseControllerHandler] relocalise global pose request!!!!!!!!!!!!!!!")
 		defer r.Body.Close()
 

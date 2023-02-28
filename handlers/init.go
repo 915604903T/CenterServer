@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	Client1Ip = "127.0.0.1"
+	Client1Ip = "210.28.134.72"
 	Client1Port = "23334"
-	Client2Ip = "127.0.0.1"
+	Client2Ip = "210.28.134.72"
 	Client2Port = "23335"
 
 	ClientAddrs = []string{}

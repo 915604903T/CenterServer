@@ -11,12 +11,12 @@ func chooseSequentialClient() int {
 }
 
 func scoreMeshClient(id int) float64 {
+	// do not consider gpu in this cpu task
 	score := 0.0
 	resourceInfoLock.RLock()
 	resourceInfo := ClientResourceStats[id]
 	resourceInfoLock.RUnlock()
 	score += float64(resourceInfo.MemoryFree) / 1e9
-	score += float64(resourceInfo.GPUMemoryFree) / 1e7
 	for _, cpu := range resourceInfo.CpuUsage {
 		score += 1 - cpu
 	}
@@ -80,4 +80,3 @@ func chooseClient(method string) int {
 		return -1
 	}
 }
-

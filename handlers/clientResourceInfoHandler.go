@@ -16,7 +16,6 @@ func MakeClientResourceInfoHandler() http.HandlerFunc {
 
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
 		// log.Println("[MakeClientResourceInfoHandler] receive", id, "client resource")
-		// log.Print("[MakeClientResourceInfoHandler]", id, "client resource: ", string(body))
 		resourceInfo := ResourceInfo{}
 		err := json.Unmarshal(body, &resourceInfo)
 		if err != nil {

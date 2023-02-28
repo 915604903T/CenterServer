@@ -48,3 +48,6 @@ var nowClient int32 = -1
 
 // generate scene pair candidates number
 const candidateNum int = 5
+
+var RelocaliseCntLock sync.Mutex
+var RelocaliseCnt = 0
