@@ -1,5 +1,7 @@
 package handlers
 
+import "time"
+
 type scenePair struct {
 	scene1, scene2 string
 }
@@ -37,4 +39,9 @@ type MergeMeshInfo struct {
 	Mesh1      MeshInfo      `json:"mesh1"`
 	Mesh2      MeshInfo      `json:"mesh2"`
 	PoseMatrix [4][4]float64 `json:"posematrix"` //scene2 to scene1 transform matrix
+}
+
+type RtScene struct {
+	Name       string
+	ExpireTime time.Time
 }

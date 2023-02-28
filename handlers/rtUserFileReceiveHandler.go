@@ -10,14 +10,14 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/nfnt/resize"
 )
 
-func MakeUserFileReceiveHandler() http.HandlerFunc {
+func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		sceneName := vars["name"]
@@ -25,19 +25,17 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		defer r.Body.Close()
 
 		// Create directory to save images, poses, calib.txt
-
-		// os.Mkdir(sceneName, 0644)
 		// read multiple files
-
+		timeout := 0
+		picsLength := 0
 		reader, err := r.MultipartReader()
 		bodyBuffer := &bytes.Buffer{}
 		bodyWriter := multipart.NewWriter(bodyBuffer)
-		picsLength := 0
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		for {
 			part, err := reader.NextPart()
 			if err == io.EOF {
@@ -46,13 +44,11 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			// fmt.Printf("FileName=[%s], FormName=[%s]\n", part.FileName(), part.FormName())
 			if part.FileName() == "" { // this is FormData
 				data, _ := ioutil.ReadAll(part)
-				fmt.Printf("FormData=[%s]\n", string(data))
+				timeout, _ = strconv.Atoi(string(data))
+				fmt.Printf("FormData=[timeout: %d s]\n", timeout)
 			} else { // This is FileData
 				//Filename contains the directory
 				name := sceneName + "/" + part.FileName()
-				if strings.Contains(name, "color") {
-					picsLength++
-				}
 				fileWriter, _ := bodyWriter.CreateFormFile("files", name)
 				var data []byte
 				_, err := part.Read(data)
@@ -80,13 +76,11 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			clientNO = chooseClient("weighted")
 		}
 
+		// send file to computing node
 		log.Println("[MakeUserFileReceiveHandler] this is client", clientNO, "choose to render ", sceneName)
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
 		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url)
-		// contentType := r.Header["Content-Type"][0]
-		// log.Println("content type: ", contentType)
-		// resp, err := http.Post(url, contentType, r.Body)
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)
@@ -96,6 +90,11 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 			resp_body, _ := ioutil.ReadAll(resp.Body)
 			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(resp_body))
 		}
+
+		// add real time scene to real time processing list
+		TimeOutMapLock.Lock()
+		TimeOutMap[sceneName] = time.Now().Add(time.Duration(timeout) * time.Second)
+		TimeOutMapLock.Unlock()
 
 		sceneLengthLock.Lock()
 		sceneLength[sceneName] = picsLength

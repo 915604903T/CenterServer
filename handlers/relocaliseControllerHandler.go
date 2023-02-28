@@ -199,17 +199,23 @@ func addMeshInfo(poseInfo globalPose) {
 
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		RelocaliseCntLock.Lock()
-		RelocaliseCnt++
-		log.Println("[runRelocalise] Relocalise Times: ", RelocaliseCnt)
-
-		RelocaliseCntLock.Unlock()
 		log.Print("[MakeRelocaliseControllerHandler] relocalise global pose request!!!!!!!!!!!!!!!")
 		defer r.Body.Close()
 
 		body, _ := ioutil.ReadAll(r.Body)
 		bodyStr := string(body)
 		log.Println("[MakeRelocaliseControllerHandler] receive globalpose:\n\n", bodyStr)
+
+		if bodyStr == "not successfully run" {
+			log.Println("[MakeRelocaliseControllerHandler] error run relocalise program")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		RelocaliseCntLock.Lock()
+		RelocaliseCnt++
+		log.Println("[runRelocalise] Relocalise Times: ", RelocaliseCnt)
+		RelocaliseCntLock.Unlock()
 
 		// do not relocalise
 		if strings.Contains(bodyStr, "failed") {
@@ -235,11 +241,6 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			RunningScenePairsLock.Unlock()
 
 			log.Println("[MakeRelocaliseControllerHandler] add ", scene1, scene2, "to failedList and remove from running list")
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		if bodyStr == "not successfully run" {
-			log.Println("[MakeRelocaliseControllerHandler] error run relocalise program")
 			w.WriteHeader(http.StatusOK)
 			return
 		}

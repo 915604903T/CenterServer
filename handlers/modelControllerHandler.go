@@ -23,11 +23,29 @@ func MakeModelControllerHandler() http.HandlerFunc {
 			log.Print("Render ", sceneName, "failed")
 			return
 		}
-		// Add scene to candidate list, the scene name must be unique
-		ScenesListLock.Lock()
-		ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
-		ProcessingScenesList = append(ProcessingScenesList, sceneName)
-		ScenesListLock.Unlock()
+
+		TimeOutMapLock.RLock()
+		timeout, ok := TimeOutMap[sceneName]
+		TimeOutMapLock.RUnlock()
+		// if not the rt scene, add it to the normal scene list
+		if !ok {
+			// Add scene to candidate list, the scene name must be unique
+			ScenesListLock.Lock()
+			ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
+			ProcessingScenesList = append(ProcessingScenesList, sceneName)
+			ScenesListLock.Unlock()
+		} else {
+			TimeOutMapLock.Lock()
+			delete(TimeOutMap, sceneName)
+			TimeOutMapLock.Unlock()
+			rtScene := RtScene{
+				Name:       sceneName,
+				ExpireTime: timeout,
+			}
+			RtScenesListLock.Lock()
+			RtProcessingScenesList = append(RtProcessingScenesList, rtScene)
+			RtScenesListLock.Unlock()
+		}
 
 		addr := body
 		clientNO := ClientIpsMap[string(addr)]

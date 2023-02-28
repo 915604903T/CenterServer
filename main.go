@@ -50,6 +50,7 @@ func main() {
 	*/
 	// run a go routine for periodly do relocalisation if candidates exist
 	go handlers.RunReloclise()
+	go handlers.DealRealTimeSceneTimeout()
 
 	// start the server
 	log.Print("Center server start at port: 23333")

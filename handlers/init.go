@@ -23,10 +23,15 @@ func init() {
 
 	ClientScenes = make(map[string]map[int]bool) // save where the scene locate
 
+	sceneLength = make(map[string]int)
+
 	FailedSceneList = make(map[string]map[string]int)
 
 	ProcessingScenesList = []string{}
 	ProcessingScenesIndex = make(map[string]int)
+
+	RtProcessingScenesList = []RtScene{}
+	TimeOutMap = make(map[string]time.Time)
 
 	RunningScenePairs = make(map[scenePair]bool)
 

@@ -7,6 +7,8 @@ import (
 type MyHandlers struct {
 	// Deal with user-send video
 	UserFileReceiveHandler http.HandlerFunc
+	// Deal with user-send video which have realtime request
+	RTUserFileReceiveHandler http.HandlerFunc
 	// Deal with finish information of model controller
 	ModelControllerHandler http.HandlerFunc
 	// Deal with global pose from relocalise controller

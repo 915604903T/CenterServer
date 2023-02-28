@@ -1,6 +1,9 @@
 package handlers
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 const clientCnt int = 2
 
@@ -18,6 +21,10 @@ var resourceInfoLock sync.RWMutex
 var ClientScenes map[string]map[int]bool
 var ClientScenesLock sync.RWMutex
 
+// record the length of the video (picture count)
+var sceneLength map[string]int
+var sceneLengthLock sync.RWMutex
+
 // record failed scene pair in order to generate more possible candidate
 var FailedSceneList map[string]map[string]int
 
@@ -26,13 +33,23 @@ var ProcessingScenesList []string
 var ProcessingScenesIndex map[string]int // help ProcessingScenesList to delete scene
 var ScenesListLock sync.RWMutex
 
+// Real time Scene prepare to relocalise
+var RtProcessingScenesList []RtScene
+var RtScenesListLock sync.RWMutex
+
+// Real time scene timeout time
+var TimeOutMap map[string]time.Time
+var TimeOutMapLock sync.RWMutex
+
 // prevent running the same scene pair at the same time
 var RunningScenePairs map[scenePair]bool
 var RunningScenePairsLock sync.RWMutex
 
+// sceneUnion shows which scenes are in the same scenario
 var sceneUnion UnionSet
 var sceneUnionLock sync.Mutex
 
+// save the pose between different scenes
 var sceneGraph map[string]map[string]Pose // does not have circle in graph
 var sceneGraphLock sync.RWMutex
 
