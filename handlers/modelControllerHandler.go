@@ -35,21 +35,24 @@ func MakeModelControllerHandler() http.HandlerFunc {
 			ProcessingScenesList = append(ProcessingScenesList, sceneName)
 			ScenesListLock.Unlock()
 		} else {
-			TimeOutMapLock.Lock()
-			delete(TimeOutMap, sceneName)
-			TimeOutMapLock.Unlock()
-			rtScene := RtScene{
-				Name:       sceneName,
-				ExpireTime: timeout,
+			if !timeout.IsFinished {
+				rtScene := RtScene{
+					Name:       sceneName,
+					ExpireTime: timeout.ExpireTime,
+				}
+				RtScenesListLock.Lock()
+				RtProcessingScenesList = append(RtProcessingScenesList, rtScene)
+				RtScenesListLock.Unlock()
+			} else {
+				log.Println("[MakeModelControllerHandler]", sceneName, "is TimeOut!!!!!!!!!")
 			}
-			RtScenesListLock.Lock()
-			RtProcessingScenesList = append(RtProcessingScenesList, rtScene)
-			RtScenesListLock.Unlock()
+
 		}
 
 		addr := body
 		clientNO := ClientIpsMap[string(addr)]
 		// fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
+
 		ClientScenesLock.Lock()
 		ClientScenes[sceneName] = map[int]bool{clientNO: true}
 		ClientScenesLock.Unlock()

@@ -10,6 +10,7 @@ import (
 func main() {
 	centerHandlers := helper.MyHandlers{
 		UserFileReceiveHandler:      handlers.MakeUserFileReceiveHandler(),
+		RTUserFileReceiveHandler:    handlers.MakeRTUserFileReceiveHandler(),
 		ModelControllerHandler:      handlers.MakeModelControllerHandler(),
 		RelocaliseControllerHandler: handlers.MakeRelocaliseControllerHandler(),
 		ClientResourceInfoHandler:   handlers.MakeClientResourceInfoHandler(),

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"sync"
-	"time"
 )
 
 const clientCnt int = 2
@@ -38,7 +37,7 @@ var RtProcessingScenesList []RtScene
 var RtScenesListLock sync.RWMutex
 
 // Real time scene timeout time
-var TimeOutMap map[string]time.Time
+var TimeOutMap map[string]*SceneTimeout
 var TimeOutMapLock sync.RWMutex
 
 // prevent running the same scene pair at the same time

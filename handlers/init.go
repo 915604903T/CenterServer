@@ -31,7 +31,7 @@ func init() {
 	ProcessingScenesIndex = make(map[string]int)
 
 	RtProcessingScenesList = []RtScene{}
-	TimeOutMap = make(map[string]time.Time)
+	TimeOutMap = make(map[string]*SceneTimeout)
 
 	RunningScenePairs = make(map[scenePair]bool)
 

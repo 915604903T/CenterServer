@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"time"
 )
 
 func RunReloclise() {
-	for ; ; time.Sleep(time.Second * 8) {
-		log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList)
+	for ; ; time.Sleep(time.Second * 6) {
+		log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList, "RtProcessingScenesList: ", RtProcessingScenesList)
 		// real time task has higher priority
 		var name1, name2 string
 		if len(RtProcessingScenesList) >= 2 {
@@ -48,7 +49,7 @@ func RunReloclise() {
 		}
 		RunningScenePairsLock.RUnlock()
 
-		maxScore1, maxScore2 := -500.0, -500.0
+		maxScore1, maxScore2 := math.Inf(-1), math.Inf(-1)
 		clientNO1, clientNO2 := -1, -2
 		// if no available client is ready; wait and continue to choose
 		ClientScenesLock.RLock()

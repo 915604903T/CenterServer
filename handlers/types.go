@@ -45,3 +45,8 @@ type RtScene struct {
 	Name       string
 	ExpireTime time.Time
 }
+
+type SceneTimeout struct {
+	ExpireTime time.Time
+	IsFinished bool
+}

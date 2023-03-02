@@ -1,20 +1,13 @@
 package handlers
 
 import (
-	"bytes"
-	"fmt"
-	"image"
-	"image/png"
-	"io"
 	"io/ioutil"
 	"log"
-	"mime/multipart"
 	"net/http"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nfnt/resize"
 )
 
 func MakeUserFileReceiveHandler() http.HandlerFunc {
@@ -24,79 +17,73 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		log.Print("[MakeUserFileReceiveHandler] receive user file request: ", sceneName)
 		defer r.Body.Close()
 
-		// Create directory to save images, poses, calib.txt
+		/*
+			reader, err := r.MultipartReader()
+			bodyBuffer := &bytes.Buffer{}
+			bodyWriter := multipart.NewWriter(bodyBuffer)
 
-		// os.Mkdir(sceneName, 0644)
-		// read multiple files
-
-		reader, err := r.MultipartReader()
-		bodyBuffer := &bytes.Buffer{}
-		bodyWriter := multipart.NewWriter(bodyBuffer)
-		picsLength := 0
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		for {
-			part, err := reader.NextPart()
-			if err == io.EOF {
-				break
-			}
-			// fmt.Printf("FileName=[%s], FormName=[%s]\n", part.FileName(), part.FormName())
-			if part.FileName() == "" { // this is FormData
-				data, _ := ioutil.ReadAll(part)
-				fmt.Printf("FormData=[%s]\n", string(data))
-			} else { // This is FileData
-				//Filename contains the directory
-				name := sceneName + "/" + part.FileName()
-				if strings.Contains(name, "color") {
-					picsLength++
-				}
-				fileWriter, _ := bodyWriter.CreateFormFile("files", name)
-				var data []byte
-				_, err := part.Read(data)
 				if err != nil {
-					log.Println(name, "part read err: ", err)
-					panic(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
 				}
-				img, format, _ := image.Decode(bytes.NewReader(data))
-				log.Println("this is ", name, "format: ", format)
-				resizeImg := resize.Resize(uint(img.Bounds().Max.X/2), 0, img, resize.NearestNeighbor)
-				err = png.Encode(fileWriter, resizeImg)
-				if err != nil {
-					log.Println("write ", name, "to body err: ", err)
-					panic(err)
+				for {
+					part, err := reader.NextPart()
+					if err == io.EOF {
+						break
+					}
+					// fmt.Printf("FileName=[%s], FormName=[%s]\n", part.FileName(), part.FormName())
+					if part.FileName() == "" { // this is FormData
+						data, _ := ioutil.ReadAll(part)
+						fmt.Printf("FormData=[%s]\n", string(data))
+					} else { // This is FileData
+						//Filename contains the directory
+						name := sceneName + "/" + part.FileName()
+						fileWriter, _ := bodyWriter.CreateFormFile("files", name)
+						// only resize rgb pic
+						if strings.Contains(name, "color") {
+							picsLength++
+							img, _, _ := image.Decode(part)
+							// log.Println("this is ", name, "format: ", format, "size: ", img.Bounds().Max.X, img.Bounds().Max.Y)
+							resizeImg := resize.Resize(uint(img.Bounds().Max.X/2), 0, img, resize.NearestNeighbor)
+							err = png.Encode(fileWriter, resizeImg)
+							if err != nil {
+								log.Println("write ", name, "to body err: ", err)
+								panic(err)
+							}
+						} //else {
+						io.Copy(fileWriter, part)
+						//}
+						// io.Copy(fileWriter, part)
+					}
 				}
-				// io.Copy(fileWriter, part)
-			}
-		}
-		contentType := bodyWriter.FormDataContentType()
-		bodyWriter.Close()
+			contentType := bodyWriter.FormDataContentType()
+			bodyWriter.Close()
+		*/
 
 		// if client does not have enough gpu resource; wait to choose
 		clientNO := -1
 		for ; clientNO == -1; time.Sleep(time.Second) {
 			clientNO = chooseClient("weighted")
 		}
-
-		log.Println("[MakeUserFileReceiveHandler] this is client", clientNO, "choose to render ", sceneName)
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
-		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url)
-		// contentType := r.Header["Content-Type"][0]
-		// log.Println("content type: ", contentType)
-		// resp, err := http.Post(url, contentType, r.Body)
-		resp, err := http.Post(url, contentType, bodyBuffer)
+		contentType := r.Header["Content-Type"][0]
+		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url, "clientNO:", clientNO)
+		log.Println("content type: ", contentType)
+		// send to client
+		resp, err := http.Post(url, contentType, r.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
+		respBody, _ := ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
-			resp_body, _ := ioutil.ReadAll(resp.Body)
-			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(resp_body))
+			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(respBody))
 		}
+		picsLength, _ := strconv.Atoi(string(respBody))
+		log.Println("[MakeUserFileReceiveHandler] ", sceneName, "length: ", picsLength)
 
+		// add video length
 		sceneLengthLock.Lock()
 		sceneLength[sceneName] = picsLength
 		sceneLengthLock.Unlock()

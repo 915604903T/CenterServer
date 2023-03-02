@@ -22,7 +22,7 @@ func Router() *mux.Router {
 
 func Serve(handlers *MyHandlers) {
 	router.HandleFunc("/user/scene/{name}", handlers.UserFileReceiveHandler)
-	router.HandleFunc("/rtuser/scene/{name}", handlers.RTUserFileReceiveHandler)
+	router.HandleFunc("/user/rtscene/{name}", handlers.RTUserFileReceiveHandler)
 	router.HandleFunc("/sys/model/{name}", handlers.ModelControllerHandler)
 	router.HandleFunc("/sys/relocalise", handlers.RelocaliseControllerHandler)
 	router.HandleFunc("/sys/client/{id}", handlers.ClientResourceInfoHandler)

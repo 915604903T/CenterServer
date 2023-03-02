@@ -2,9 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"fmt"
-	"image"
-	"image/png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nfnt/resize"
 )
 
 func MakeRTUserFileReceiveHandler() http.HandlerFunc {
@@ -24,10 +20,8 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 		log.Print("[MakeUserFileReceiveHandler] receive user file request: ", sceneName)
 		defer r.Body.Close()
 
-		// Create directory to save images, poses, calib.txt
-		// read multiple files
+		// get the timeout time
 		timeout := 0
-		picsLength := 0
 		reader, err := r.MultipartReader()
 		bodyBuffer := &bytes.Buffer{}
 		bodyWriter := multipart.NewWriter(bodyBuffer)
@@ -35,7 +29,6 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		for {
 			part, err := reader.NextPart()
 			if err == io.EOF {
@@ -45,60 +38,48 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 			if part.FileName() == "" { // this is FormData
 				data, _ := ioutil.ReadAll(part)
 				timeout, _ = strconv.Atoi(string(data))
-				fmt.Printf("FormData=[timeout: %d s]\n", timeout)
-			} else { // This is FileData
-				//Filename contains the directory
+				log.Printf("[MakeUserFileReceiveHandler] FormName=[%s] FormData=[%d s]\n", part.FormName(), timeout)
+			} else {
 				name := sceneName + "/" + part.FileName()
 				fileWriter, _ := bodyWriter.CreateFormFile("files", name)
-				var data []byte
-				_, err := part.Read(data)
-				if err != nil {
-					log.Println(name, "part read err: ", err)
-					panic(err)
-				}
-				img, format, _ := image.Decode(bytes.NewReader(data))
-				log.Println("this is ", name, "format: ", format)
-				resizeImg := resize.Resize(uint(img.Bounds().Max.X/2), 0, img, resize.NearestNeighbor)
-				err = png.Encode(fileWriter, resizeImg)
-				if err != nil {
-					log.Println("write ", name, "to body err: ", err)
-					panic(err)
-				}
-				// io.Copy(fileWriter, part)
+				io.Copy(fileWriter, part)
 			}
 		}
 		contentType := bodyWriter.FormDataContentType()
 		bodyWriter.Close()
-
-		// if client does not have enough gpu resource; wait to choose
+		// if client does not have enough gpu resource; wait to choose; init some send para
 		clientNO := -1
 		for ; clientNO == -1; time.Sleep(time.Second) {
 			clientNO = chooseClient("weighted")
 		}
-
-		// send file to computing node
-		log.Println("[MakeUserFileReceiveHandler] this is client", clientNO, "choose to render ", sceneName)
 		sendAddr := ClientAddrs[clientNO]
 		url := sendAddr + "/render/scene/" + sceneName
-		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url)
+		log.Print("[MakeUserFileReceiveHandler] forward the request to client server: ", url, "clientNO:", clientNO)
+		log.Println("[MakeUserFileReceiveHandler] content type: ", contentType)
+		// send to the client
 		resp, err := http.Post(url, contentType, bodyBuffer)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
+		respBody, _ := ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
-			resp_body, _ := ioutil.ReadAll(resp.Body)
-			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(resp_body))
+			log.Fatal("[MakeUserFileReceiveHandler] receive error from model controller: ", string(respBody))
 		}
-
-		// add real time scene to real time processing list
-		TimeOutMapLock.Lock()
-		TimeOutMap[sceneName] = time.Now().Add(time.Duration(timeout) * time.Second)
-		TimeOutMapLock.Unlock()
-
+		picsLength, _ := strconv.Atoi(string(respBody))
+		log.Println("[MakeUserFileReceiveHandler] ", sceneName, "length: ", picsLength)
+		// add video length
 		sceneLengthLock.Lock()
 		sceneLength[sceneName] = picsLength
 		sceneLengthLock.Unlock()
+
+		// add real time scene to real time processing list
+		TimeOutMapLock.Lock()
+		TimeOutMap[sceneName] = &SceneTimeout{
+			ExpireTime: time.Now().Add(time.Duration(timeout) * time.Second),
+			IsFinished: false,
+		}
+		TimeOutMapLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))
