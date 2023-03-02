@@ -84,9 +84,14 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		log.Println("[MakeUserFileReceiveHandler] ", sceneName, "length: ", picsLength)
 
 		// add video length
-		sceneLengthLock.Lock()
-		sceneLength[sceneName] = picsLength
-		sceneLengthLock.Unlock()
+		defaultUser := Users[DefaultUserName]
+		defaultUser.SceneLengthLock.Lock()
+		defaultUser.SceneLength[sceneName] = picsLength
+		defaultUser.SceneLengthLock.Unlock()
+		// add scene to default user
+		SceneUserMapLock.Lock()
+		SceneUserMap[sceneName] = DefaultUserName
+		SceneUserMapLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))

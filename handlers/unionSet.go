@@ -6,8 +6,8 @@ type UnionSet struct {
 	Size   map[string]int
 }
 
-func NewUnionSet() UnionSet {
-	return UnionSet{
+func NewUnionSet() *UnionSet {
+	return &UnionSet{
 		Parent: make(map[string]string),
 		Rank:   make(map[string]int),
 		Size:   make(map[string]int),

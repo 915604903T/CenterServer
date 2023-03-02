@@ -21,26 +21,24 @@ func init() {
 	ClientIpsMap["http://"+Client2Ip+":"+Client2Port] = count
 	count++
 
-	ClientScenes = make(map[string]map[int]bool) // save where the scene locate
-
-	sceneLength = make(map[string]int)
-
-	FailedSceneList = make(map[string]map[string]int)
-
-	ProcessingScenesList = []string{}
-	ProcessingScenesIndex = make(map[string]int)
-
-	RtProcessingScenesList = []RtScene{}
-	TimeOutMap = make(map[string]*SceneTimeout)
-
+	Users = make(map[string]*User)
+	Users[DefaultUserName] = NewUser(DefaultUserName)
+	SceneUserMap = make(map[string]string)
 	RunningScenePairs = make(map[scenePair]bool)
-
-	sceneUnion = NewUnionSet()
-	sceneGraph = make(map[string]map[string]Pose)
-
-	sceneMesh = make(map[string]*MeshInfo)
-
+	FailedSceneList = make(map[string]map[string]int)
 	RunningMeshes = make(map[*MeshInfo]bool)
+
+	/*
+		ClientScenes = make(map[string]map[int]bool) // save where the scene locate
+		sceneLength = make(map[string]int)
+		ProcessingScenesList = []string{}
+		ProcessingScenesIndex = make(map[string]int)
+		RtProcessingScenesList = []RtScene{}
+		TimeOutMap = make(map[string]*SceneTimeout)
+		sceneUnion = NewUnionSet()
+		sceneGraph = make(map[string]map[string]Pose)
+		sceneMesh = make(map[string]*MeshInfo)
+	*/
 
 	rand.Seed(time.Now().Unix())
 }

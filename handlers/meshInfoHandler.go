@@ -10,12 +10,19 @@ import (
 func processMeshInfo(info MeshInfo) {
 	// cover origin scene info match
 	originMeshes := make(map[*MeshInfo]bool)
-	sceneMeshLock.Lock()
+	var user *User
 	for scene := range info.Scenes {
-		sceneMesh[scene] = &info
+		UsersLock.RLock()
+		user = Users[scene]
+		UsersLock.RUnlock()
+		break
+	}
+	user.SceneMeshLock.Lock()
+	for scene := range info.Scenes {
+		user.SceneMesh[scene] = &info
 		originMeshes[&info] = true
 	}
-	sceneMeshLock.Unlock()
+	user.SceneMeshLock.Unlock()
 
 	RunningMeshesLock.Lock()
 	for mesh := range originMeshes {

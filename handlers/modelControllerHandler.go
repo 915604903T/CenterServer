@@ -24,49 +24,76 @@ func MakeModelControllerHandler() http.HandlerFunc {
 			return
 		}
 
-		TimeOutMapLock.RLock()
-		timeout, ok := TimeOutMap[sceneName]
-		TimeOutMapLock.RUnlock()
-		// if not the rt scene, add it to the normal scene list
-		if !ok {
-			// Add scene to candidate list, the scene name must be unique
-			ScenesListLock.Lock()
-			ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
-			ProcessingScenesList = append(ProcessingScenesList, sceneName)
-			ScenesListLock.Unlock()
-		} else {
-			if !timeout.IsFinished {
-				rtScene := RtScene{
-					Name:       sceneName,
-					ExpireTime: timeout.ExpireTime,
-				}
-				RtScenesListLock.Lock()
-				RtProcessingScenesList = append(RtProcessingScenesList, rtScene)
-				RtScenesListLock.Unlock()
-			} else {
-				log.Println("[MakeModelControllerHandler]", sceneName, "is TimeOut!!!!!!!!!")
-			}
+		SceneUserMapLock.RLock()
+		userName := SceneUserMap[sceneName]
+		SceneUserMapLock.RUnlock()
+		UsersLock.RLock()
+		user := Users[userName]
+		UsersLock.RUnlock()
 
-		}
+		// Add scene to candidate list, the scene name must be unique
+		user.ProcessingScenesLock.Lock()
+		user.ProcessingScenes = append(user.ProcessingScenes, sceneName)
+		user.ProcessingScenesLock.Unlock()
 
+		// Add Client scene relation
 		addr := body
 		clientNO := ClientIpsMap[string(addr)]
-		// fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
-
-		ClientScenesLock.Lock()
-		ClientScenes[sceneName] = map[int]bool{clientNO: true}
-		ClientScenesLock.Unlock()
+		user.ClientScenesLock.Lock()
+		user.ClientScenes[sceneName] = map[int]bool{clientNO: true}
+		user.ClientScenesLock.Unlock()
 
 		// init a graph node
-		sceneGraphLock.Lock()
-		sceneGraph[sceneName] = make(map[string]Pose)
-		sceneGraphLock.Unlock()
+		user.SceneGraphLock.Lock()
+		user.SceneGraph[sceneName] = make(map[string]Pose)
+		user.SceneGraphLock.Unlock()
 
 		// init a union element
-		sceneUnionLock.Lock()
-		sceneUnion.initInsert(sceneName)
-		sceneUnionLock.Unlock()
+		user.SceneUnionLock.Lock()
+		user.SceneUnion.initInsert(sceneName)
+		user.SceneUnionLock.Unlock()
 
+		// if not the rt scene, add it to the normal scene list
+		/*
+				if !ok {
+					// Add scene to candidate list, the scene name must be unique
+					ScenesListLock.Lock()
+					ProcessingScenesIndex[sceneName] = len(ProcessingScenesList)
+					ProcessingScenesList = append(ProcessingScenesList, sceneName)
+					ScenesListLock.Unlock()
+				} else {
+					if !timeout.IsFinished {
+						rtScene := RtScene{
+							Name:       sceneName,
+							ExpireTime: timeout.ExpireTime,
+						}
+						RtScenesListLock.Lock()
+						RtProcessingScenesList = append(RtProcessingScenesList, rtScene)
+						RtScenesListLock.Unlock()
+					} else {
+						log.Println("[MakeModelControllerHandler]", sceneName, "is TimeOut!!!!!!!!!")
+					}
+
+				}
+
+			addr := body
+			clientNO := ClientIpsMap[string(addr)]
+			// fmt.Println("finishRendering!!!!!!!!!!!!!!!!!!name:", sceneName, "addr:", addr, "clientNO:", clientNO)
+
+			ClientScenesLock.Lock()
+			ClientScenes[sceneName] = map[int]bool{clientNO: true}
+			ClientScenesLock.Unlock()
+
+			// init a graph node
+			sceneGraphLock.Lock()
+			sceneGraph[sceneName] = make(map[string]Pose)
+			sceneGraphLock.Unlock()
+
+			// init a union element
+			sceneUnionLock.Lock()
+			sceneUnion.initInsert(sceneName)
+			sceneUnionLock.Unlock()
+		*/
 		w.WriteHeader(http.StatusOK)
 	}
 }

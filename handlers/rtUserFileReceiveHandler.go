@@ -17,6 +17,7 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		sceneName := vars["name"]
+		userName := vars["username"]
 		log.Print("[MakeUserFileReceiveHandler] receive user file request: ", sceneName)
 		defer r.Body.Close()
 
@@ -68,18 +69,31 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 		}
 		picsLength, _ := strconv.Atoi(string(respBody))
 		log.Println("[MakeUserFileReceiveHandler] ", sceneName, "length: ", picsLength)
-		// add video length
-		sceneLengthLock.Lock()
-		sceneLength[sceneName] = picsLength
-		sceneLengthLock.Unlock()
 
-		// add real time scene to real time processing list
-		TimeOutMapLock.Lock()
-		TimeOutMap[sceneName] = &SceneTimeout{
-			ExpireTime: time.Now().Add(time.Duration(timeout) * time.Second),
-			IsFinished: false,
+		// if it is a new user, we need to lock to add it to the map since maybe the same new user can have conflict
+		UsersLock.Lock()
+		user, ok := Users[userName]
+		if !ok {
+			newUser := NewUser(userName)
+			newUser.SceneLength[sceneName] = picsLength
+			newUser.ExpireTime = time.Now().Add(time.Duration(timeout) * time.Second)
+			Users[userName] = user
 		}
-		TimeOutMapLock.Unlock()
+		UsersLock.Unlock()
+		if ok {
+			// update sceneLength
+			user.SceneLengthLock.Lock()
+			user.SceneLength[sceneName] = picsLength
+			user.SceneLengthLock.Unlock()
+			// update expiretime
+			user.ExpireTimeLock.Lock()
+			user.ExpireTime = time.Now().Add(time.Duration(timeout) * time.Second)
+			user.ExpireTimeLock.Unlock()
+		}
+		// add scene to default user
+		SceneUserMapLock.Lock()
+		SceneUserMap[sceneName] = DefaultUserName
+		SceneUserMapLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))

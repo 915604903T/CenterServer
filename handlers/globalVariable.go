@@ -5,6 +5,7 @@ import (
 )
 
 const clientCnt int = 2
+const DefaultUserName string = "default"
 
 // client network info
 var Client1Ip, Client2Ip string
@@ -16,6 +17,25 @@ var ClientIpsMap map[string]int
 var ClientResourceStats [clientCnt]ResourceInfo
 var resourceInfoLock sync.RWMutex
 
+// User info map
+var Users map[string]*User
+var UsersLock sync.RWMutex
+
+// the relation between user and scene
+var SceneUserMap map[string]string
+var SceneUserMapLock sync.RWMutex
+
+// record failed scene pair in order to generate more possible candidate
+var FailedSceneList map[string]map[string]int
+
+// prevent running the same scene pair at the same time
+var RunningScenePairs map[scenePair]bool
+var RunningScenePairsLock sync.RWMutex
+
+var RunningMeshes map[*MeshInfo]bool
+var RunningMeshesLock sync.RWMutex
+
+/*
 // give info about which clients a specific scene locates (one scene can locate multiple client)
 var ClientScenes map[string]map[int]bool
 var ClientScenesLock sync.RWMutex
@@ -23,9 +43,6 @@ var ClientScenesLock sync.RWMutex
 // record the length of the video (picture count)
 var sceneLength map[string]int
 var sceneLengthLock sync.RWMutex
-
-// record failed scene pair in order to generate more possible candidate
-var FailedSceneList map[string]map[string]int
 
 // Scene prepare to relocalise
 var ProcessingScenesList []string
@@ -40,10 +57,6 @@ var RtScenesListLock sync.RWMutex
 var TimeOutMap map[string]*SceneTimeout
 var TimeOutMapLock sync.RWMutex
 
-// prevent running the same scene pair at the same time
-var RunningScenePairs map[scenePair]bool
-var RunningScenePairsLock sync.RWMutex
-
 // sceneUnion shows which scenes are in the same scenario
 var sceneUnion UnionSet
 var sceneUnionLock sync.Mutex
@@ -55,9 +68,7 @@ var sceneGraphLock sync.RWMutex
 // find the corresponding mesh of a specific scene
 var sceneMesh map[string]*MeshInfo
 var sceneMeshLock sync.RWMutex
-
-var RunningMeshes map[*MeshInfo]bool
-var RunningMeshesLock sync.RWMutex
+*/
 
 // for random choose client usage
 var nowClient int32 = -1

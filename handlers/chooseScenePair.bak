@@ -1,4 +1,4 @@
-package handlers
+/*package handlers
 
 import (
 	"log"
@@ -163,3 +163,4 @@ func genCandidates(method string) (string, string) {
 		return "", ""
 	}
 }
+*/

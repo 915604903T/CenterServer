@@ -7,25 +7,21 @@ import (
 
 func DealRealTimeSceneTimeout() {
 	for ; ; time.Sleep(time.Second) {
-		RtScenesListLock.RLock()
-		for i, rtScene := range RtProcessingScenesList {
-			if time.Now().After(rtScene.ExpireTime) {
-				RtScenesListLock.RUnlock()
-				log.Println("[DealRealTimeSceneTimeout] ", rtScene.Name, "is timeout!!! Remove it from RtProcessingScenesList")
-				RtScenesListLock.Lock()
-				// remove timeout scene
-				RtProcessingScenesList = append(RtProcessingScenesList[:i], RtProcessingScenesList[i+1:]...)
-				RtScenesListLock.Unlock()
-
-				TimeOutMapLock.Lock()
-				sceneTimeout := TimeOutMap[rtScene.Name]
-				sceneTimeout.IsFinished = true
-				log.Println("[DealRealTimeSceneTimeout] timemap: ", TimeOutMap)
-				TimeOutMapLock.Unlock()
-
-				RtScenesListLock.RLock()
+		UsersLock.RLock()
+		for name, user := range Users {
+			user.ExpireTimeLock.RLock()
+			isTimeout := time.Now().After(user.ExpireTime)
+			user.ExpireTimeLock.RUnlock()
+			if isTimeout {
+				UsersLock.RUnlock()
+				UsersLock.Lock()
+				delete(Users, name)
+				UsersLock.Unlock()
+				UsersLock.RLock()
+				log.Println("[DealRealTimeSceneTimeout] Delete ", name)
+				log.Println("[DealRealTimeSceneTimeout] This is Users: ", Users)
 			}
 		}
-		RtScenesListLock.RUnlock()
+		UsersLock.RUnlock()
 	}
 }

@@ -1,15 +1,14 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
+/*
 func bfsFindPath(scene1, scene2 string) []string {
 	log.Println("[bfsFindPath] ", scene1, scene2)
 	pre := map[string]string{}
@@ -196,7 +195,7 @@ func addMeshInfo(poseInfo globalPose) {
 	sceneMeshLock.Unlock()
 
 }
-
+*/
 func MakeRelocaliseControllerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Print("[MakeRelocaliseControllerHandler] relocalise global pose request!!!!!!!!!!!!!!!")
@@ -221,10 +220,13 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		if strings.Contains(bodyStr, "failed") {
 			content := strings.Fields(bodyStr)
 			scene1, scene2 := content[0], content[1]
+			UsersLock.RLock()
+			user := Users[scene1]
+			UsersLock.RUnlock()
 
 			RunningScenePairsLock.Lock()
-			delete(RunningScenePairs, scenePair{scene1, scene2})
-			delete(RunningScenePairs, scenePair{scene2, scene1})
+			delete(RunningScenePairs, scenePair{user.Name + "-" + scene1, user.Name + "-" + scene2})
+			delete(RunningScenePairs, scenePair{user.Name + "-" + scene2, user.Name + "-" + scene1})
 			// not deadlock??
 			if FailedSceneList[scene1] == nil {
 				FailedSceneList[scene1] = make(map[string]int)
@@ -253,19 +255,25 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		// Get User, scene1 and scene2 must be the same user!!!!
+		scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
+		UsersLock.RLock()
+		user := Users[scene1]
+		UsersLock.RUnlock()
 		// add edge between two scene
-		addGraphEdge(poseInfo)
+		user.AddGraphEdge(poseInfo)
 
 		// save mesh info for two scene
-		addMeshInfo(poseInfo)
+		user.AddMeshInfo(poseInfo)
 
 		// request merge mesh if need
-		scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
-		doMeshRequest(scene1, scene2)
+
+		user.DoMeshRequest(scene1, scene2)
 
 		RunningScenePairsLock.Lock()
-		delete(RunningScenePairs, scenePair{poseInfo.Scene1Name, poseInfo.Scene2Name})
-		delete(RunningScenePairs, scenePair{poseInfo.Scene2Name, poseInfo.Scene1Name})
+		delete(RunningScenePairs, scenePair{user.Name + "-" + scene1, user.Name + "-" + scene2})
+		delete(RunningScenePairs, scenePair{user.Name + "-" + scene2, user.Name + "-" + scene1})
 		RunningScenePairsLock.Unlock()
 		log.Println("[MakeRelocaliseControllerHandler] remove from running list: ", poseInfo.Scene1Name, poseInfo.Scene2Name)
 		log.Println("[MakeRelocaliseControllerHandler] this is globalpose struct:\n", poseInfo)
@@ -274,9 +282,9 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 		ip1, ip2 := poseInfo.Scene1Ip, poseInfo.Scene2Ip
 		if ip1 != ip2 {
 			clientNO1 := ClientIpsMap[ip1]
-			ClientScenesLock.Lock()
-			ClientScenes[scene2][clientNO1] = true
-			ClientScenesLock.Unlock()
+			user.ClientScenesLock.Lock()
+			user.ClientScenes[scene2][clientNO1] = true
+			user.ClientScenesLock.Unlock()
 		}
 
 		w.WriteHeader(http.StatusOK)

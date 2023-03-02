@@ -12,39 +12,39 @@ import (
 
 func RunReloclise() {
 	for ; ; time.Sleep(time.Second * 6) {
-		log.Println("[runRelocalise] ProcessingScene: ", ProcessingScenesList, "RtProcessingScenesList: ", RtProcessingScenesList)
-		// real time task has higher priority
+		// get user candidate
+		UsersLock.RLock()
+		user := chooseUser()
+		UsersLock.RUnlock()
+		log.Println("[runRelocalise] User:", user, "ProcessingScene: ", user.ProcessingScenes)
+
+		// get scene pair candidate
 		var name1, name2 string
-		if len(RtProcessingScenesList) >= 2 {
-			RtScenesListLock.RLock()
-			name1, name2 = genCandidates("realTime")
-			RtScenesListLock.RUnlock()
-		} else if len(ProcessingScenesList) >= 2 {
-			// randomly choose scene to relocalise
-			ScenesListLock.RLock()
-			name1, name2 = genCandidates("weighted")
-			ScenesListLock.RUnlock()
+		if len(user.ProcessingScenes) >= 2 {
+			user.ProcessingScenesLock.RLock()
+			name1, name2 = user.GenCandidates("weighted")
+			user.ProcessingScenesLock.RUnlock()
 		} else {
 			continue
 		}
-
-		log.Println("[runRelocalise] scene pair: ", name1, name2)
+		log.Println("[runRelocalise] User:", user, "scene pair: ", name1, name2)
 		// cannot choose a suitable candidate, then continue
 		if name1 == "" && name2 == "" {
-			log.Println("[runRelocalise] invalid candidate")
+			log.Println("[runRelocalise] User:", user, "invalid candidate")
 			continue
 		}
+		// if scene pair is already running, choose another
 		RunningScenePairsLock.RLock()
-		_, ok := RunningScenePairs[scenePair{name1, name2}]
+		_, ok := RunningScenePairs[scenePair{user.Name + "-" + name1, user.Name + "-" + name2}]
 		if ok {
 			RunningScenePairsLock.RUnlock()
-			log.Println("[runRelocalise] ", name1, name2, "scene pair is running")
+			log.Println("[runRelocalise] ", user.Name+"-"+name1, user.Name+"-"+name2, "scene pair is running")
 			continue
 		}
-		_, ok = RunningScenePairs[scenePair{name2, name1}]
+		_, ok = RunningScenePairs[scenePair{user.Name + "-" + name2, user.Name + "-" + name1}]
 		if ok {
 			RunningScenePairsLock.RUnlock()
-			log.Println("[runRelocalise] ", name1, name2, "scene pair is running")
+			log.Println("[runRelocalise] ", user.Name+"-"+name1, user.Name+"-"+name2, "scene pair is running")
 			continue
 		}
 		RunningScenePairsLock.RUnlock()
@@ -52,13 +52,13 @@ func RunReloclise() {
 		maxScore1, maxScore2 := math.Inf(-1), math.Inf(-1)
 		clientNO1, clientNO2 := -1, -2
 		// if no available client is ready; wait and continue to choose
-		ClientScenesLock.RLock()
-		clients4scene1 := ClientScenes[name1]
-		clients4scene2 := ClientScenes[name2]
-		ClientScenesLock.RUnlock()
+		user.ClientScenesLock.RLock()
+		clients4scene1 := user.ClientScenes[name1]
+		clients4scene2 := user.ClientScenes[name2]
+		user.ClientScenesLock.RUnlock()
 		// log.Println("[runRelocalise] scene1:", name1, " clients4scene1:", clients4scene1)
 		// log.Println("[runRelocalise] scene2:", name2, " clients4scene2:", clients4scene2)
-		// maxScore1, maxScore2 = -200.0, -200.0
+
 		//choose client 1
 		for k := range clients4scene1 {
 			if _, ok := clients4scene2[k]; ok {
@@ -93,7 +93,8 @@ func RunReloclise() {
 			}
 		}
 		log.Println("[runReloclise] maxScore1:", maxScore1, "clientNO1:", clientNO1, "maxScore2:", maxScore2, "clientNO2:", clientNO2)
-		if maxScore1 < 0 && maxScore2 < 0 { // no available client can do relocalise
+		// no available client can do relocalise
+		if maxScore1 < 0 && maxScore2 < 0 {
 			log.Println("[runReloclise] no available client to run")
 			continue
 		}
@@ -133,9 +134,14 @@ func RunReloclise() {
 		defer resp.Body.Close()
 
 		RunningScenePairsLock.Lock()
-		RunningScenePairs[scenePair{name1, name2}] = true
-		RunningScenePairs[scenePair{name2, name1}] = true
+		RunningScenePairs[scenePair{user.Name + "-" + name1, user.Name + "-" + name2}] = true
+		RunningScenePairs[scenePair{user.Name + "-" + name2, user.Name + "-" + name1}] = true
 		RunningScenePairsLock.Unlock()
+
+		user.RelocaliseCntLock.Lock()
+		user.RelocaliseCnt++
+		user.RelocaliseCntLock.Unlock()
+
 		log.Println("[runRelocalise] add scene pair to running list:", name1, name2)
 		if resp.StatusCode != http.StatusOK {
 			resp_body, _ := ioutil.ReadAll(resp.Body)
