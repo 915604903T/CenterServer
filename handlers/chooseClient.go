@@ -16,10 +16,18 @@ func scoreMeshClient(id int) float64 {
 	resourceInfoLock.RLock()
 	resourceInfo := ClientResourceStats[id]
 	resourceInfoLock.RUnlock()
-	score += float64(resourceInfo.MemoryFree) / 1e9
-	for _, cpu := range resourceInfo.CpuUsage {
-		score += 1 - cpu
+	score += float64(resourceInfo.MemoryFree) / 1e8
+	// suppose we divide cpu to different client on the server
+	cpuTotal := 0.0
+	for i := (id - 1) * 48; i < id*48; i++ {
+		cpuTotal += 100 - resourceInfo.CpuUsage[i]
 	}
+	score += cpuTotal / 48
+	/*
+		for _, cpu := range resourceInfo.CpuUsage {
+			score += 100 - cpu
+		}
+	*/
 	return score
 }
 
@@ -31,11 +39,19 @@ func scoreRelocClient(id int) float64 {
 	if resourceInfo.GPUMemoryFree/1e6 < 5000.0 {
 		return -100.0
 	}
-	score += float64(resourceInfo.MemoryFree) / 1e9
+	score += float64(resourceInfo.MemoryFree) / 1e8
 	score += float64(resourceInfo.GPUMemoryFree) / 1e7
-	for _, cpu := range resourceInfo.CpuUsage {
-		score += 1 - cpu
+	// suppose we divide cpu to different client on the server
+	cpuTotal := 0.0
+	for i := (id - 1) * 48; i < id*48; i++ {
+		cpuTotal += 100 - resourceInfo.CpuUsage[i]
 	}
+	score += cpuTotal / 48
+	/*
+		for _, cpu := range resourceInfo.CpuUsage {
+			score += 100 - cpu
+		}
+	*/
 	return score
 }
 
@@ -47,11 +63,19 @@ func scoreRenderClient(id int) float64 {
 	if resourceInfo.GPUMemoryFree/1e6 < 2700.0 {
 		return -100.0
 	}
-	score += float64(resourceInfo.MemoryFree) / 1e9
+	score += float64(resourceInfo.MemoryFree) / 1e8
 	score += float64(resourceInfo.GPUMemoryFree) / 1e7
-	for _, cpu := range resourceInfo.CpuUsage {
-		score += 1 - cpu
+	// suppose we divide cpu to different client on the server
+	cpuTotal := 0.0
+	for i := (id - 1) * 48; i < id*48; i++ {
+		cpuTotal += 100 - resourceInfo.CpuUsage[i]
 	}
+	score += cpuTotal / 48
+	/*
+		for _, cpu := range resourceInfo.CpuUsage {
+			score += 100 - cpu
+		}
+	*/
 	return score
 }
 

@@ -15,12 +15,13 @@ func MakeClientResourceInfoHandler() http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
-		// log.Println("[MakeClientResourceInfoHandler] receive", id, "client resource")
+
 		resourceInfo := ResourceInfo{}
 		err := json.Unmarshal(body, &resourceInfo)
 		if err != nil {
 			panic(err)
 		}
+		//log.Println("[MakeClientResourceInfoHandler] receive", id, "client resource:\n", resourceInfo)
 		resourceInfoLock.Lock()
 		ClientResourceStats[id-1] = resourceInfo
 		resourceInfoLock.Unlock()

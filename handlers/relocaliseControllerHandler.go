@@ -213,15 +213,19 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 
 		RelocaliseCntLock.Lock()
 		RelocaliseCnt++
-		log.Println("[runRelocalise] Relocalise Times: ", RelocaliseCnt)
+		log.Println("[MakeRelocaliseControllerHandler] Relocalise Times: ", RelocaliseCnt)
 		RelocaliseCntLock.Unlock()
 
 		// do not relocalise
 		if strings.Contains(bodyStr, "failed") {
 			content := strings.Fields(bodyStr)
 			scene1, scene2 := content[0], content[1]
+
+			SceneUserMapLock.RLock()
+			username := SceneUserMap[scene1]
+			SceneUserMapLock.RUnlock()
 			UsersLock.RLock()
-			user := Users[scene1]
+			user := Users[username]
 			UsersLock.RUnlock()
 
 			RunningScenePairsLock.Lock()
@@ -258,8 +262,11 @@ func MakeRelocaliseControllerHandler() http.HandlerFunc {
 
 		// Get User, scene1 and scene2 must be the same user!!!!
 		scene1, scene2 := poseInfo.Scene1Name, poseInfo.Scene2Name
+		SceneUserMapLock.RLock()
+		userName := SceneUserMap[scene1]
+		SceneUserMapLock.RUnlock()
 		UsersLock.RLock()
-		user := Users[scene1]
+		user := Users[userName]
 		UsersLock.RUnlock()
 		// add edge between two scene
 		user.AddGraphEdge(poseInfo)

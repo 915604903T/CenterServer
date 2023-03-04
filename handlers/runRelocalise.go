@@ -11,40 +11,56 @@ import (
 )
 
 func RunReloclise() {
-	for ; ; time.Sleep(time.Second * 6) {
-		// get user candidate
-		UsersLock.RLock()
-		user := chooseUser()
-		UsersLock.RUnlock()
-		log.Println("[runRelocalise] User:", user, "ProcessingScene: ", user.ProcessingScenes)
+	var sleepDuration time.Duration
 
-		// get scene pair candidate
+	for ; ; time.Sleep(sleepDuration) {
+		// get user candidates
+		UsersLock.RLock()
+		usersScore := chooseUser().Keys()
+		UsersLock.RUnlock()
+
+		// choose user and get scene pair candidate
+		var user *User
 		var name1, name2 string
-		if len(user.ProcessingScenes) >= 2 {
-			user.ProcessingScenesLock.RLock()
-			name1, name2 = user.GenCandidates("weighted")
-			user.ProcessingScenesLock.RUnlock()
-		} else {
+		for _, tmpUserScore := range usersScore {
+			tmpUser := tmpUserScore.(UserScore).User
+			log.Println("[runRelocalise] User:", tmpUser.Name, "|| ProcessingScene: ", tmpUser.ProcessingScenes)
+			if len(tmpUser.ProcessingScenes) >= 2 {
+				tmpUser.ProcessingScenesLock.RLock()
+				name1, name2 = tmpUser.GenCandidates("weighted")
+				tmpUser.ProcessingScenesLock.RUnlock()
+			} else {
+				continue
+			}
+			log.Println("[runRelocalise] User:", tmpUser.Name, "|| scene pair: ", name1, name2)
+			// cannot choose a suitable candidate, then continue
+			if name1 == "" && name2 == "" {
+				log.Println("[runRelocalise] User:", tmpUser.Name, "invalid candidate")
+				continue
+			} else {
+				user = tmpUser
+				break
+			}
+		}
+		if user == nil {
+			log.Println("[runRelocalise] not available user's scene to do relocalise")
+			sleepDuration = time.Second * time.Duration(NormalRelocaliseInterval)
 			continue
 		}
-		log.Println("[runRelocalise] User:", user, "scene pair: ", name1, name2)
-		// cannot choose a suitable candidate, then continue
-		if name1 == "" && name2 == "" {
-			log.Println("[runRelocalise] User:", user, "invalid candidate")
-			continue
-		}
-		// if scene pair is already running, choose another
+		// if scene pair is already running, choose another, wait shorter
 		RunningScenePairsLock.RLock()
 		_, ok := RunningScenePairs[scenePair{user.Name + "-" + name1, user.Name + "-" + name2}]
 		if ok {
 			RunningScenePairsLock.RUnlock()
 			log.Println("[runRelocalise] ", user.Name+"-"+name1, user.Name+"-"+name2, "scene pair is running")
+			sleepDuration = time.Second * time.Duration(ShortRelocaliseInterval)
 			continue
 		}
 		_, ok = RunningScenePairs[scenePair{user.Name + "-" + name2, user.Name + "-" + name1}]
 		if ok {
 			RunningScenePairsLock.RUnlock()
 			log.Println("[runRelocalise] ", user.Name+"-"+name1, user.Name+"-"+name2, "scene pair is running")
+			sleepDuration = time.Second * time.Duration(ShortRelocaliseInterval)
 			continue
 		}
 		RunningScenePairsLock.RUnlock()
@@ -89,6 +105,7 @@ func RunReloclise() {
 				maxScore1, maxScore2 = score, score
 			}
 			if score < 0 {
+				sleepDuration = time.Second * time.Duration(NormalRelocaliseInterval)
 				continue
 			}
 		}
@@ -96,6 +113,7 @@ func RunReloclise() {
 		// no available client can do relocalise
 		if maxScore1 < 0 && maxScore2 < 0 {
 			log.Println("[runReloclise] no available client to run")
+			sleepDuration = time.Second * time.Duration(NormalRelocaliseInterval)
 			continue
 		}
 		// always send to high score client to do relocalise
@@ -148,5 +166,6 @@ func RunReloclise() {
 			log.Fatal("[runRelocalise] receive error from relocalise: ", resp_body)
 			return
 		}
+		sleepDuration = time.Second * time.Duration(NormalRelocaliseInterval)
 	}
 }

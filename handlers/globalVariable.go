@@ -6,6 +6,8 @@ import (
 
 const clientCnt int = 2
 const DefaultUserName string = "default"
+const NormalRelocaliseInterval int = 7
+const ShortRelocaliseInterval int = 3
 
 // client network info
 var Client1Ip, Client2Ip string

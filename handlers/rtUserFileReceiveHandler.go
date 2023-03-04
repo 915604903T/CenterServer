@@ -18,7 +18,7 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 		vars := mux.Vars(r)
 		sceneName := vars["name"]
 		userName := vars["username"]
-		log.Print("[MakeUserFileReceiveHandler] receive user file request: ", sceneName)
+		log.Print("[MakeUserFileReceiveHandler] receive user", userName, "file request: ", sceneName)
 		defer r.Body.Close()
 
 		// get the timeout time
@@ -77,10 +77,11 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 			newUser := NewUser(userName)
 			newUser.SceneLength[sceneName] = picsLength
 			newUser.ExpireTime = time.Now().Add(time.Duration(timeout) * time.Second)
-			Users[userName] = user
+			Users[userName] = newUser
 		}
 		UsersLock.Unlock()
 		if ok {
+			log.Println("user: ", user, "ok: ", ok)
 			// update sceneLength
 			user.SceneLengthLock.Lock()
 			user.SceneLength[sceneName] = picsLength
@@ -92,11 +93,12 @@ func MakeRTUserFileReceiveHandler() http.HandlerFunc {
 		}
 		// add scene to default user
 		SceneUserMapLock.Lock()
-		SceneUserMap[sceneName] = DefaultUserName
+		SceneUserMap[sceneName] = userName
+		log.Println("[MakeUserFileReceiveHandler] RT SceneUsermap: ", SceneUserMap)
 		SceneUserMapLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("save file success!"))
-		log.Println("[MakeUserFileReceiveHandler] finish")
+		log.Println("[MakeUserFileReceiveHandler] finish", sceneName)
 	}
 }

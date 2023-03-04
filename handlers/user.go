@@ -115,7 +115,7 @@ func (user *User) DoMeshRequest(scene1, scene2 string) {
 	var pScene1, pScene2 string
 	var mesh1, mesh2 *MeshInfo
 	// check whether the required meshes are occupied
-	for ; ; time.Sleep(time.Second) {
+	for ; ; time.Sleep(time.Second * 2) {
 		user.SceneUnionLock.Lock()
 		pScene1, pScene2 = user.SceneUnion.find(scene1), user.SceneUnion.find(scene2)
 		size1, size2 = user.SceneUnion.Size[pScene1], user.SceneUnion.Size[pScene2]
@@ -209,7 +209,9 @@ func (user *User) AddGraphEdge(poseInfo globalPose) {
 	pose21 := NewPoseMatrix(pose21Mat)
 	log.Println("[addGraphEdge] add scene graph edge: ", scene1, scene2)
 	user.SceneGraphLock.Lock()
+	log.Println("[addGraphEdge] get scenegraph lock!!")
 	user.SceneGraph[scene1][scene2] = pose12
+	log.Println("[addGraphEdge] 1111111111")
 	user.SceneGraph[scene2][scene1] = pose21
 	user.SceneGraphLock.Unlock()
 	log.Println("[addGraphEdge] after add scene graph edge: ", scene1, scene2)
@@ -272,14 +274,14 @@ func (user *User) scoreCandidate(c1, c2 string) float64 {
 			score -= float64(count * 100)
 		}
 	}
-	log.Println("[scoreCandidate] after evaluate failedlist score: ", score)
+	// log.Println("[scoreCandidate] after evaluate failedlist score: ", score)
 	// let longer scene first, because it will probabaly contain more scenes
 	user.SceneLengthLock.RLock()
 	length1 := user.SceneLength[c1]
 	length2 := user.SceneLength[c2]
 	user.SceneLengthLock.RUnlock()
 	score += float64(length1+length2) / 10.0
-	log.Println("[scoreCandidate] after evaluate sceneLength score: ", score)
+	// log.Println("[scoreCandidate] after evaluate sceneLength score: ", score)
 	return score
 }
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"math/rand"
 	"time"
 )
@@ -22,7 +23,9 @@ func init() {
 	count++
 
 	Users = make(map[string]*User)
-	Users[DefaultUserName] = NewUser(DefaultUserName)
+	user := NewUser(DefaultUserName)
+	user.ExpireTime = time.Now().Add(math.MaxInt64 * time.Nanosecond) // set default user timeout is max duration
+	Users[DefaultUserName] = user
 	SceneUserMap = make(map[string]string)
 	RunningScenePairs = make(map[scenePair]bool)
 	FailedSceneList = make(map[string]map[string]int)

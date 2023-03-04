@@ -91,6 +91,7 @@ func MakeUserFileReceiveHandler() http.HandlerFunc {
 		// add scene to default user
 		SceneUserMapLock.Lock()
 		SceneUserMap[sceneName] = DefaultUserName
+		log.Println("[MakeUserFileReceiveHandler] SceneUsermap: ", SceneUserMap)
 		SceneUserMapLock.Unlock()
 
 		w.WriteHeader(http.StatusOK)
